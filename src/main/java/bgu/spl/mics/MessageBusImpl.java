@@ -8,6 +8,10 @@ package bgu.spl.mics;
  */
 public class MessageBusImpl implements MessageBus {
 	
+	// Fields
+	private static volatile MessageBus theBus;
+
+
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		// TODO Auto-generated method stub
@@ -57,6 +61,15 @@ public class MessageBusImpl implements MessageBus {
 		return null;
 	}
 
-	
-
+	// getters
+	// 
+	public static MessageBus getMessageBus() {
+		if(theBus == null) {
+			synchronized(MessageBus.class) {
+				if(theBus == null)
+				theBus = new MessageBusImpl();
+			}
+		}
+		return theBus;
+	}
 }
