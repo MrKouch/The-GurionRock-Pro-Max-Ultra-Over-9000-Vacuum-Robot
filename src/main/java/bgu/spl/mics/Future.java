@@ -12,11 +12,17 @@ import java.util.concurrent.TimeUnit;
  */
 public class Future<T> {
 	
+	// Fields
+	private T result;
+	private boolean isResolved;
+	private final Object lock;
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
 	public Future() {
-		//TODO: implement this
+		result = null;
+		isResolved = false;
+		lock = new Object();
 	}
 	
 	/**
@@ -28,23 +34,39 @@ public class Future<T> {
      * 	       
      */
 	public T get() {
-		//TODO: implement this.
-		return null;
+		if(!isDone()) {
+			synchronized(lock) {
+				while (!isDone()) {
+					try {
+						wait();
+					} catch(InterruptedException e) {
+						Thread.currentThread().interrupt(); // Not sure
+					}	
+				}
+			}
+		}
+		return result;
 	}
 	
 	/**
      * Resolves the result of this Future object.
      */
 	public void resolve (T result) {
-		//TODO: implement this.
+		synchronized(lock) {
+			this.result = result;
+			isResolved = true;
+			lock.notifyAll();
+		}
+		
 	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise
      */
 	public boolean isDone() {
-		//TODO: implement this.
-		return false;
+		synchronized(lock) {
+			return isResolved;	//not sure
+		}
 	}
 	
 	/**
@@ -59,8 +81,20 @@ public class Future<T> {
      *         elapsed, return null.
      */
 	public T get(long timeout, TimeUnit unit) {
-		//TODO: implement this.
-		return null;
+		long timeOutMillis = unit.toMillis(timeout);
+		long endTime = System.currentTimeMillis() + timeOutMillis;
+		synchronized(lock) {
+			while(!isDone() && timeOutMillis > 0) {
+				try {
+					wait(timeOutMillis);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return null;
+				}
+				timeOutMillis = endTime - System.currentTimeMillis();
+			}
+			return isDone() ? result : null;
+		}
 	}
 
 }
