@@ -47,7 +47,7 @@ public interface MessageBus {
      * @param b 	The message to added to the queues.
      */
     void sendBroadcast(Broadcast b);
-
+    
     /**
      * Adds the {@link Event} {@code e} to the message queue of one of the
      * micro-services subscribed to {@code e.getClass()} in a round-robin
