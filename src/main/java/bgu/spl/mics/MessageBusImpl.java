@@ -83,19 +83,17 @@ public class MessageBusImpl implements MessageBus {
     public void unregister(MicroService m) {
         microServicesMessages.remove(m);
 
-        Enumeration<Class<? extends Event<?>>> enu = eventsSubscribers.keys();
-        // Displaying the Enumeration 
-        while (enu.hasMoreElements()) { 
-            System.out.println(enu.nextElement()); 
-        } 
-
-        // Iterator<ConcurrentHashMap.Entry<Class<? extends Event<?>>, LinkedBlockingQueue<MicroService>>>itr =
-        //  eventsSubscribers.entrySet().iterator();
-        // while (itr.hasNext()) {
-        //     ConcurrentHashMap.Entry<Class<? extends Event<?>>, LinkedBlockingQueue<MicroService>> entry
-        //         = itr.next();
-        //  eventsSubscribers.get(entry).remove(entry);
-        // }
+        Enumeration<Class<? extends Event<?>>> eventsEnu = eventsSubscribers.keys();
+        while (eventsEnu.hasMoreElements()) { 
+			LinkedBlockingQueue<MicroService> currentQ = eventsSubscribers.get(eventsEnu.nextElement());
+			currentQ.remove(m);
+        }
+		
+        Enumeration<Class<? extends Broadcast>> broadcastsEnu = broadcastsSubscribers.keys();
+        while (broadcastsEnu.hasMoreElements()) { 
+			LinkedBlockingQueue<MicroService> currentQ = broadcastsSubscribers.get(broadcastsEnu.nextElement());
+			currentQ.remove(m);
+        }
     }
 
     @Override
