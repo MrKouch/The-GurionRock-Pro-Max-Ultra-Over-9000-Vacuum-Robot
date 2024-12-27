@@ -14,7 +14,6 @@ import java.util.Iterator;
 public class MessageBusImpl implements MessageBus {
     
     // Fields
-    private static volatile MessageBus theBus;
     private ConcurrentHashMap<Class<? extends Event<?>>, LinkedBlockingQueue<MicroService>> eventsSubscribers;
     private ConcurrentHashMap<Class<? extends Broadcast>, LinkedBlockingQueue<MicroService>> broadcastsSubscribers;
     private ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> microServicesMessages;
@@ -23,6 +22,10 @@ public class MessageBusImpl implements MessageBus {
     private MessageBusImpl() {
         eventsSubscribers = new ConcurrentHashMap<>();
         broadcastsSubscribers = new ConcurrentHashMap<>();
+    }
+
+    private static class MessageBusHolder {
+        private static MessageBusImpl instance = new MessageBusImpl();
     }
 
     @Override
@@ -107,25 +110,19 @@ public class MessageBusImpl implements MessageBus {
     // 
     // public getInstance method
     public static MessageBus getMessageBus() {
-        if(theBus == null) {
-            synchronized(MessageBus.class) {
-                if(theBus == null)
-                theBus = new MessageBusImpl();
-            }
-        }
-        return theBus;
+        return MessageBusHolder.instance;
     }
 
 	// WHAT IS THIS?
-    public static MessageBus removeFromQueue() {
-        if(theBus == null) {
-            synchronized(MessageBus.class) {
-                if(theBus == null)
-                theBus = new MessageBusImpl();
-            }
-        }
-        return theBus;
-    }
+    // public static MessageBus removeFromQueue() {
+    //     if(theBus == null) {
+    //         synchronized(MessageBus.class) {
+    //             if(theBus == null)
+    //             theBus = new MessageBusImpl();
+    //         }
+    //     }
+    //     return theBus;
+    // }
 
 }
 
