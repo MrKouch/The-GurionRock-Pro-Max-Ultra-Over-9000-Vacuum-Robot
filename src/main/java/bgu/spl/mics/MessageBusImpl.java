@@ -27,14 +27,22 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        eventsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
-        eventsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
+        // eventsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
+        // eventsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
+		
+		// Its better to use computeIfAbsent
+		// IMPROVEMENT SUGGESTION
+		eventsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
     }
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        broadcastsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
-        broadcastsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
+        // broadcastsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
+        // broadcastsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
+
+		// Its better to use computeIfAbsent
+		// IMPROVEMENT SUGGESTION
+		broadcastsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
     }
 
     @Override
@@ -89,12 +97,15 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
-        // TODO Auto-generated method stub
-        return null;
+        LinkedBlockingQueue<Message> queue = microServicesMessages.get(m);
+		if(queue == null) {
+			throw new IllegalStateException("MicroService is not registered");
+		}
+        return queue.take(); // Blocks until a message is available
     }
 
-    // getters
     // 
+    // public getInstance method
     public static MessageBus getMessageBus() {
         if(theBus == null) {
             synchronized(MessageBus.class) {
@@ -104,6 +115,8 @@ public class MessageBusImpl implements MessageBus {
         }
         return theBus;
     }
+
+	// WHAT IS THIS?
     public static MessageBus removeFromQueue() {
         if(theBus == null) {
             synchronized(MessageBus.class) {
