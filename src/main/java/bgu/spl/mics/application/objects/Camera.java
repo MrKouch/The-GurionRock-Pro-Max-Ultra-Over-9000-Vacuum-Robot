@@ -7,14 +7,14 @@ import java.util.List;
 public class Camera {
 
     // Fields
-    private final int id; // The ID of the camera
+    private final String id; // The ID of the camera
     private int frequency; // Time interval at which the camera sends new events
     private STATUS status; // The status of the camera (Up, Down, Error)
     private List<StampedDetectedObjects> detectedObjectsList; // Time-stamped objects detected by the camera
 
 
     // Constructor
-    public Camera(int id, int frequency, STATUS status, List<StampedDetectedObjects> detectedObjectsList) {
+    public Camera(String id, int frequency, STATUS status, List<StampedDetectedObjects> detectedObjectsList) {
         this.id = id;
         this.frequency = frequency;
         this.status = status;
@@ -22,7 +22,7 @@ public class Camera {
     }
 
     // Getters and Setters
-    public int getId() {
+    public String getId() {
         return id;
     }
 
