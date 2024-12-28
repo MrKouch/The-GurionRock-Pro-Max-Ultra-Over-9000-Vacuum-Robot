@@ -64,6 +64,7 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
+        // change to computeIfAbsent
         eventsCallBacksDictionary.putIfAbsent(type, callback);
         theBus.subscribeEvent(type, this);
     }
@@ -89,6 +90,7 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
+         // change to computeIfAbsent
         broadcastsCallBacksDictionary.putIfAbsent(type, callback);
         theBus.subscribeBroadcast(type, this);
     }

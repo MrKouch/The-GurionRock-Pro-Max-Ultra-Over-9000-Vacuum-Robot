@@ -2,6 +2,11 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
+import bgu.spl.mics.application.messages.DetectObjectsEvents;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+// import bgu.spl.mics.application.messages.*;
 
 /**
  * CameraService is responsible for processing data from the camera and
@@ -11,15 +16,33 @@ import bgu.spl.mics.application.objects.Camera;
  * the system's StatisticalFolder upon sending its observations.
  */
 public class CameraService extends MicroService {
-
+    Camera camera;
     /**
      * Constructor for CameraService.
      *
      * @param camera The Camera object that this service will use to detect objects.
      */
     public CameraService(Camera camera) {
-        super("Change_This_Name");
-        // TODO Implement this
+        super("camera"+camera.getId().toString());
+        this.camera = camera;
+    }
+
+    private StampedDetectedObjects isReadyDetectedObjectsExists(int currentTime) {
+        List<StampedDetectedObjects> detectedObjects = camera.getDetectedObjectsList();
+        for (StampedDetectedObjects objectsDetectedInTime : detectedObjects) {
+            if (objectsDetectedInTime.getTime() + camera.getFrequency() == currentTime)
+                return true;
+        }
+        return false;
+    }
+
+    private StampedDetectedObjects getReadyDetectedObjects(int currentTime) {
+        List<StampedDetectedObjects> detectedObjects = camera.getDetectedObjectsList();
+        for (StampedDetectedObjects objectsDetectedInTime : detectedObjects) {
+            if (objectsDetectedInTime.getTime() + camera.getFrequency() == currentTime)
+                return objectsDetectedInTime;
+        }
+        return null;
     }
 
     /**
@@ -29,6 +52,27 @@ public class CameraService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        subscribeEvent(TickBroadcast.class, ev -> {
+            System.out.println("Camera " + getName() + " got a new TickBroadcast");
+            int currentTime = ev.getCurrentTime();
+            if (isReadyDetectedObjectsExists(currentTime)) {
+                StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
+                Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
+                if (futureObject != null) {
+                    // the futureObject.get() is a blocking method - make sure it's okay
+                    Boolean resolved = futureObject.get();
+                    if (resolved) {
+                        System.out.println("The object's coordinations has been successfully processed by a LiDARWorker and the Fusion.");
+                    }
+                    else {
+                        System.out.println("FAILED: The object's coordinations has not been successfully processed by a LiDARWorker and the Fusion.");
+                    }
+                }
+                else {
+                    System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
+                }
+            }
+            complete(ev, "");
+        });
     }
 }
