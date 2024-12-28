@@ -8,5 +8,5 @@ package bgu.spl.mics;
  * the {@link MessageBus}) must implement it.
  */
 public interface Message {
-
+    
 }

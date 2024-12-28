@@ -2,7 +2,7 @@ package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.Event;
 
-public class DetectObjectsEvent implements Event<DetectObjectsEvent> {
+public class DetectObjectsEvent implements Event<Boolean> {
 //  Sent by: Camera
 // • Handled by: a LiDar Worker
 // • Details:

@@ -9,17 +9,19 @@ import java.util.List;
  */
 public class LiDarWorkerTracker {
 
-    private final int id; // The ID of the LiDar
+    private final String id; // The ID of the LiDar
     private int frequency; // The time interval at which the LiDar sends new events
     private Status status; // The status of the LiDar
     private List<TrackedObject> lastTrackedObjects; // The last objects the LiDar tracked
+
+    // ADD FIELDS OR METHODS TO GET INFORMATION FROM THE LIDARDATABASE
 
     public enum Status {
         UP, DOWN, ERROR
     }
 
     // Constructor
-    public LiDarWorkerTracker(int id, int frequency, Status status, List<TrackedObject> lastTrackedObjects) {
+    public LiDarWorkerTracker(String id, int frequency, Status status, List<TrackedObject> lastTrackedObjects) {
         this.id = id;
         this.frequency = frequency;
         this.status = status;
@@ -27,7 +29,7 @@ public class LiDarWorkerTracker {
     }
 
     // Getters
-    public int getId() {
+    public String getId() {
         return id;
     }
 
