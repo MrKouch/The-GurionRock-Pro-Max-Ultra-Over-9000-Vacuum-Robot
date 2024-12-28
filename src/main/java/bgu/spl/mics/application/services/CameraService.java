@@ -1,8 +1,12 @@
 package bgu.spl.mics.application.services;
 
+import java.util.List;
+
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.Future;
 import bgu.spl.mics.application.objects.Camera;
-import bgu.spl.mics.application.messages.DetectObjectsEvents;
+import bgu.spl.mics.application.objects.StampedDetectedObjects;
+import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
@@ -23,11 +27,11 @@ public class CameraService extends MicroService {
      * @param camera The Camera object that this service will use to detect objects.
      */
     public CameraService(Camera camera) {
-        super("camera"+camera.getId().toString());
+        super("camera"+Integer.toString(camera.getId()));
         this.camera = camera;
     }
 
-    private StampedDetectedObjects isReadyDetectedObjectsExists(int currentTime) {
+    private Boolean isReadyDetectedObjectsExists(int currentTime) {
         List<StampedDetectedObjects> detectedObjects = camera.getDetectedObjectsList();
         for (StampedDetectedObjects objectsDetectedInTime : detectedObjects) {
             if (objectsDetectedInTime.getTime() + camera.getFrequency() == currentTime)
@@ -52,9 +56,9 @@ public class CameraService extends MicroService {
      */
     @Override
     protected void initialize() {
-        subscribeEvent(TickBroadcast.class, ev -> {
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             System.out.println("Camera " + getName() + " got a new TickBroadcast");
-            int currentTime = ev.getCurrentTime();
+            int currentTime = tickBroadcast.getCurrentTime();
             if (isReadyDetectedObjectsExists(currentTime)) {
                 StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
                 Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
@@ -72,7 +76,6 @@ public class CameraService extends MicroService {
                     System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
                 }
             }
-            complete(ev, "");
         });
     }
 }

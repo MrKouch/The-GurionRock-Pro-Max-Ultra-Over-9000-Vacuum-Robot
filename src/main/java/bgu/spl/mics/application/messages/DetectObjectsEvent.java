@@ -1,9 +1,10 @@
 package bgu.spl.mics.application.messages;
 
+import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.Event;
 
 public class DetectObjectsEvent implements Event<Boolean> {
-    List<StampedDetectedObjects> newDetectedObjects;
+    StampedDetectedObjects newDetectedObjects;
 //  Sent by: Camera
 // • Handled by: a LiDar Worker
 // • Details:
@@ -14,7 +15,7 @@ public class DetectObjectsEvent implements Event<Boolean> {
 
     // Fields
     
-    public DetectObjectsEvent(List<StampedDetectedObjects> newDetectedObjects) {
+    public DetectObjectsEvent(StampedDetectedObjects newDetectedObjects) {
         this.newDetectedObjects = newDetectedObjects;
     }
 }

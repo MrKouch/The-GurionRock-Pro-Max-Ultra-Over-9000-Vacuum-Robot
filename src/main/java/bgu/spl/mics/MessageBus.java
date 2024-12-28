@@ -9,9 +9,10 @@ package bgu.spl.mics;
  * You must not alter any of the given methods of this interface. 
  * You cannot add methods to this interface.
  */
-public interface MessageBus {
+public interface MessageBus { 
 
     /**
+     * 
      * Subscribes {@code m} to receive {@link Event}s of type {@code type}.
      * <p>
      * @param <T>  The type of the result expected by the completed event.

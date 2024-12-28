@@ -1,6 +1,6 @@
 package bgu.spl.mics;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap; 
 
 
 /**
@@ -167,7 +167,7 @@ public abstract class MicroService implements Runnable {
         initialize();
         theBus.register(this);
         while (!terminated) {
-            System.out.println("NOT IMPLEMENTED!!!"); //TODO: you should delete this line :)
+            System.out.println("NOT IMPLEMENTED!!!"); //TODO: you should delete this line
             // consumer producer design pattern
         }
         theBus.unregister(this);
