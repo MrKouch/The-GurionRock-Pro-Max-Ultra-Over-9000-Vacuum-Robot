@@ -1,6 +1,11 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.messages.TrackedObjectsEvent;
+import bgu.spl.mics.application.objects.LiDarWorkerTracker;
 
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
@@ -12,14 +17,16 @@ import bgu.spl.mics.MicroService;
  */
 public class LiDarService extends MicroService {
 
+    // Fields
+    private LiDarWorkerTracker liDarWorkerTracker;
     /**
      * Constructor for LiDarService.
      *
      * @param LiDarWorkerTracker A LiDAR Tracker worker object that this service will use to process data.
      */
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
-        super("Change_This_Name");
-        // TODO Implement this
+        super("LiDAR_ID: " + LiDarWorkerTracker.getId());
+        this.liDarWorkerTracker = LiDarWorkerTracker;
     }
 
     /**
@@ -29,6 +36,17 @@ public class LiDarService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        System.out.println("LiDAR Service " + getName() + " has srarted");
+        subscribeBroadcast(TerminatedBroadcast.class, terminationEvent -> {
+            terminate();
+        });
+        subscribeBroadcast(CrashedBroadcast.class, stopNow -> {
+            throw new RuntimeException("LiDAR with ID: " + liDarWorkerTracker.getId() + "stops now because " + stopNow.getCrashedBecause());
+        });
+        //TODO: HANDLE THE TIME-STAMPING OF THE OBJECTS
+        subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
+            sendEvent(new TrackedObjectsEvent(liDarWorkerTracker.getId(), liDarWorkerTracker.getLastTrackedObjects()));
+        });
+
     }
 }
