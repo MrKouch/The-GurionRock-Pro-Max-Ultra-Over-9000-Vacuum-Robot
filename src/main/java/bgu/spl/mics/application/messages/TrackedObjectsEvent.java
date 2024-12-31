@@ -17,18 +17,12 @@ public class TrackedObjectsEvent implements Event<String> {
 
     // Fields
     private final String senderID;
-    private final String receiverID;
     private List<TrackedObject> trackedObjects;
 
     // Constructor
-    public TrackedObjectsEvent(String senderID, String receiverID, List<TrackedObject> trackedObjects) {
+    public TrackedObjectsEvent(String senderID, List<TrackedObject> trackedObjects) {
         this.senderID = senderID;
-        this.receiverID = receiverID;
         this.trackedObjects = trackedObjects;
-    }
-
-    public String getReceiverID() {
-        return receiverID;
     }
 
     public String getSenderID() {

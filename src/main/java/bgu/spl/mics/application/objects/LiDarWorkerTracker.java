@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.LinkedList;
 import java.util.List;
+
+import javax.sound.midi.Track;
 
 /**
  * LiDarWorkerTracker is responsible for managing a LiDAR worker.
@@ -11,21 +14,17 @@ public class LiDarWorkerTracker {
 
     private final String id; // The ID of the LiDar
     private int frequency; // The time interval at which the LiDar sends new events
-    private Status status; // The status of the LiDar
+    private STATUS status; // The status of the LiDar
     private List<TrackedObject> lastTrackedObjects; // The last objects the LiDar tracked
 
     // ADD FIELDS OR METHODS TO GET INFORMATION FROM THE LIDARDATABASE
 
-    public enum Status {
-        UP, DOWN, ERROR
-    }
-
     // Constructor
-    public LiDarWorkerTracker(String id, int frequency, Status status, List<TrackedObject> lastTrackedObjects) {
+    public LiDarWorkerTracker(String id, int frequency, STATUS status) {
         this.id = id;
         this.frequency = frequency;
         this.status = status;
-        this.lastTrackedObjects = lastTrackedObjects;
+        this.lastTrackedObjects = new LinkedList<TrackedObject>();
     }
 
     // Getters
@@ -37,7 +36,7 @@ public class LiDarWorkerTracker {
         return frequency;
     }
 
-    public Status getStatus() {
+    public STATUS getStatus() {
         return status;
     }
 
@@ -50,11 +49,28 @@ public class LiDarWorkerTracker {
         this.frequency = frequency;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(STATUS status) {
         this.status = status;
     }
 
-    public void setLastTrackedObjects(List<TrackedObject> lastTrackedObjects) {
-        this.lastTrackedObjects = lastTrackedObjects;
-    } 
+    public void findTrackedObjects(int detectionTime) {
+        for (StampedCloudPoints stampedCloudPoints : LiDarDataBase.getInstance("./lidar_data.json").getCloudPoints()) { // not sure about the input
+            for(TrackedObject object : lastTrackedObjects) {
+                if(object.getTime() == stampedCloudPoints.getTime() && object.getId() == stampedCloudPoints.getId()) {
+                    object.getCoordinates().add(stampedCloudPoints.getCloudPoints());
+                }
+            }
+            
+            // if(stampedCloudPoints.getTime() == detectionTime) {
+            //     for(TrackedObject object : lastTrackedObjects) {
+            //         for(stampedCloudPoints )
+            //         if(stampedCloudPoints.getId() == lastTrackedObjects.)
+            //     }
+            // }
+        }
+    }
+    
+    // public void addTrackedObject(DetectedObject detectedObject) {
+
+    // }
 }

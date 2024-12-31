@@ -9,10 +9,10 @@ import java.util.List;
 public class StampedCloudPoints {
     private final String id; // The ID of the object
     private final int time; // The time the object was tracked
-    private List<List<Double>> cloudPoints; // List of cloud points
+    private List<CloudPoint> cloudPoints; // List of cloud points
 
     // Constructor
-    public StampedCloudPoints(String id, int time, List<List<Double>> cloudPoints) {
+    public StampedCloudPoints(String id, int time, List<CloudPoint> cloudPoints) {
         this.id = id;
         this.time = time;
         this.cloudPoints = cloudPoints;
@@ -27,12 +27,12 @@ public class StampedCloudPoints {
         return time;
     }
 
-    public List<List<Double>> getCloudPoints() {
+    public List<CloudPoint> getCloudPoints() {
         return cloudPoints;
     }
 
     // Setter for cloudPoints
-    public void setCloudPoints(List<List<Double>> cloudPoints) {
+    public void setCloudPoints(List<CloudPoint> cloudPoints) {
         this.cloudPoints = cloudPoints;
     }
 }

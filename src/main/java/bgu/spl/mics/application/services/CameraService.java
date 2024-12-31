@@ -31,7 +31,7 @@ public class CameraService extends MicroService {
         this.camera = camera;
     }
 
-    private Boolean isReadyDetectedObjectsExists(int currentTime) {
+    private boolean isReadyDetectedObjectsExists(int currentTime) {
         List<StampedDetectedObjects> detectedObjects = camera.getDetectedObjectsList();
         for (StampedDetectedObjects objectsDetectedInTime : detectedObjects) {
             if (objectsDetectedInTime.getTime() + camera.getFrequency() == currentTime)

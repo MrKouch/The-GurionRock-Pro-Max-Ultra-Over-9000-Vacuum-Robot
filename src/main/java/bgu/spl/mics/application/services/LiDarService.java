@@ -1,11 +1,17 @@
 package bgu.spl.mics.application.services;
 
+import java.util.LinkedList;
+import java.util.List;
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
+import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
+import bgu.spl.mics.application.objects.TrackedObject;
 
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
@@ -19,6 +25,7 @@ public class LiDarService extends MicroService {
 
     // Fields
     private LiDarWorkerTracker liDarWorkerTracker;
+    private List<TrackedObject> trackedObjects;
     /**
      * Constructor for LiDarService.
      *
@@ -27,6 +34,7 @@ public class LiDarService extends MicroService {
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
         super("LiDAR_ID: " + LiDarWorkerTracker.getId());
         this.liDarWorkerTracker = LiDarWorkerTracker;
+        this.trackedObjects = new LinkedList<TrackedObject>();
     }
 
     /**
@@ -37,16 +45,36 @@ public class LiDarService extends MicroService {
     @Override
     protected void initialize() {
         System.out.println("LiDAR Service " + getName() + " has srarted");
+        // NOT SURE
         subscribeBroadcast(TerminatedBroadcast.class, terminationEvent -> {
             terminate();
         });
+        // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, stopNow -> {
             throw new RuntimeException("LiDAR with ID: " + liDarWorkerTracker.getId() + "stops now because " + stopNow.getCrashedBecause());
         });
-        //TODO: HANDLE THE TIME-STAMPING OF THE OBJECTS
-        subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
-            sendEvent(new TrackedObjectsEvent(liDarWorkerTracker.getId(), liDarWorkerTracker.getLastTrackedObjects()));
+
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
+            liDarWorkerTracker.findTrackedObjects(tickBroadcast.getCurrentTime());
+            for(TrackedObject object : liDarWorkerTracker.getLastTrackedObjects()) {
+                if(object.getCoordinates() != null) {
+                    trackedObjects.add(object);
+                }
+            }
+            sendEvent(new TrackedObjectsEvent(getName(), trackedObjects));
+            trackedObjects.clear();
+            liDarWorkerTracker.getLastTrackedObjects().clear();
         });
+
+        subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
+            
+            for(DetectedObject detectedObject : detectObjectsEvent.getStampedDetectedObjects().getDetectedObjects()) {
+                TrackedObject trackedObject = new TrackedObject(detectedObject, detectObjectsEvent.getStampedDetectedObjects().getTime());
+                liDarWorkerTracker.getLastTrackedObjects().add(trackedObject);
+            }
+        });
+
+
 
     }
 }
