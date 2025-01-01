@@ -54,23 +54,12 @@ public class LiDarWorkerTracker {
     }
 
     public void findTrackedObjects(int detectionTime) {
-        for (StampedCloudPoints stampedCloudPoints : LiDarDataBase.getInstance("./lidar_data.json").getCloudPoints()) { // not sure about the input
+        for (StampedCloudPoints stampedCloudPoints : LiDarDataBase.getInstance().getCloudPoints()) { // not sure about the input
             for(TrackedObject object : lastTrackedObjects) {
                 if(object.getTime() == stampedCloudPoints.getTime() && object.getId() == stampedCloudPoints.getId()) {
-                    object.getCoordinates().add(stampedCloudPoints.getCloudPoints());
+                    object.setCoordinates(stampedCloudPoints.getCloudPoints());
                 }
             }
-            
-            // if(stampedCloudPoints.getTime() == detectionTime) {
-            //     for(TrackedObject object : lastTrackedObjects) {
-            //         for(stampedCloudPoints )
-            //         if(stampedCloudPoints.getId() == lastTrackedObjects.)
-            //     }
-            // }
         }
     }
-    
-    // public void addTrackedObject(DetectedObject detectedObject) {
-
-    // }
 }

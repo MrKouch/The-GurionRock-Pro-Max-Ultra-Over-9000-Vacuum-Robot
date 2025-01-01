@@ -23,7 +23,7 @@ public class LiDarDataBase {
      * @param filePath The path to the LiDAR data file.
      * @return The singleton instance of LiDarDataBase.
      */
-    public static LiDarDataBase getInstance(String filePath) {
+    public static LiDarDataBase getInstance() {
         return LiDarDataBaseHolder.instance;
     }
 

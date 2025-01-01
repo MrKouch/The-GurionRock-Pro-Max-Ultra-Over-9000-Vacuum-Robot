@@ -40,8 +40,10 @@ public class GPSIMU {
         return poseList;
     }
 
-    public void setPoseList(List<Pose> poseList) {
-        this.poseList = poseList;
+    public Pose getPoseByTick(int tick) {
+        return getPoseList().get(tick);
     }
+
+
 }
 

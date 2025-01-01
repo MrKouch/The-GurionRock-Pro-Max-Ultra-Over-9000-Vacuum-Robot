@@ -28,6 +28,11 @@ public class MessageBusImpl implements MessageBus {
         private static MessageBusImpl instance = new MessageBusImpl();
     }
 
+    // public getInstance method
+    public static MessageBus getMessageBus() {
+        return MessageBusHolder.instance;
+    }
+
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         // eventsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
@@ -106,10 +111,7 @@ public class MessageBusImpl implements MessageBus {
     }
 
     // 
-    // public getInstance method
-    public static MessageBus getMessageBus() {
-        return MessageBusHolder.instance;
-    }
+    
 
 	// WHAT IS THIS?
     // public static MessageBus removeFromQueue() {

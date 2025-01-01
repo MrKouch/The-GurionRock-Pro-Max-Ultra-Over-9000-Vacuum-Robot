@@ -35,5 +35,13 @@ public class Pose {
         this.y = y;
     }
 
+    public int getTime() {
+        return time;
+    }
+    
+    public float getYaw() {
+        return yaw;
+    }
+
 }  
 

@@ -27,7 +27,7 @@ public class TrackedObject {
         this.id = detectedObject.getId();
         this.time = detectionTime;
         this.description = detectedObject.getDescription();
-        this.coordinates = new ArrayList<CloudPoint>();
+        this.coordinates = null;
     }
 
     // Getters
