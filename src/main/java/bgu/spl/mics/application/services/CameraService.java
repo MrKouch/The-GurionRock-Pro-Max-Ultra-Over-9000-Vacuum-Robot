@@ -31,15 +31,6 @@ public class CameraService extends MicroService {
         this.camera = camera;
     }
 
-    private Boolean isReadyDetectedObjectsExists(int currentTime) {
-        List<StampedDetectedObjects> detectedObjects = camera.getDetectedObjectsList();
-        for (StampedDetectedObjects objectsDetectedInTime : detectedObjects) {
-            if (objectsDetectedInTime.getTime() + camera.getFrequency() == currentTime)
-                return true;
-        }
-        return false;
-    }
-
     private StampedDetectedObjects getReadyDetectedObjects(int currentTime) {
         List<StampedDetectedObjects> detectedObjects = camera.getDetectedObjectsList();
         for (StampedDetectedObjects objectsDetectedInTime : detectedObjects) {
@@ -59,8 +50,9 @@ public class CameraService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             System.out.println("Camera " + getName() + " got a new TickBroadcast");
             int currentTime = tickBroadcast.getCurrentTime();
-            if (isReadyDetectedObjectsExists(currentTime)) {
-                StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
+
+            StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
+            if (readyDetectedObjects != null) {
                 Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
                 if (futureObject != null) {
                     // the futureObject.get() is a blocking method - make sure it's okay
@@ -76,6 +68,10 @@ public class CameraService extends MicroService {
                     System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
                 }
             }
+        });
+
+        subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            System.out.println("Camera " + getName() + " is being terminated");
         });
     }
 }

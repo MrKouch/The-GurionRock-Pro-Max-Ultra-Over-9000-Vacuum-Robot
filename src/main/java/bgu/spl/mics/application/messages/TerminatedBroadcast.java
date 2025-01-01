@@ -1,12 +1,13 @@
 package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.Broadcast;
+import bgu.spl.mics.MicroService;
 
 public class TerminatedBroadcast implements Broadcast {
-    int sensorId;
+    Class<? extends MicroService> serviceWhoTerminated;
     String terminatedBecause;
-    public TerminatedBroadcast(int sensorId, String terminatedBecause) {
-        this.sensorId = sensorId;
+    public TerminatedBroadcast(Class<? extends MicroService> serviceWhoTerminated, String terminatedBecause) {
+        this.serviceWhoTerminated = serviceWhoTerminated;
         this.terminatedBecause = terminatedBecause;
     }
 }
