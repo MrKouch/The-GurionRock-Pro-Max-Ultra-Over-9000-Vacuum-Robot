@@ -1,4 +1,5 @@
 package bgu.spl.mics.application.objects;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,11 +14,20 @@ public class TrackedObject {
     private List<CloudPoint> coordinates; // The coordinates of the object
 
     // Constructor
+    // TODO: check if this standard boring construcctor is necessary
     public TrackedObject(String id, int time, String description, List<CloudPoint> coordinates) {
         this.id = id;
         this.time = time;
         this.description = description;
         this.coordinates = coordinates;
+    }
+
+    // Constructor - Builds a new TrackedObject from a given StampedDetectedObject
+    public TrackedObject(DetectedObject detectedObject, int detectionTime) {
+        this.id = detectedObject.getId();
+        this.time = detectionTime;
+        this.description = detectedObject.getDescription();
+        this.coordinates = new ArrayList<CloudPoint>();
     }
 
     // Getters

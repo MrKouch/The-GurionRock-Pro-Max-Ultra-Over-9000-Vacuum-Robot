@@ -6,7 +6,7 @@ import java.util.List;
  * It provides access to cloud point data and other relevant information for tracked objects.
  */
 public class LiDarDataBase {
-    List<StampedCloudPoints> cloudPoints;
+    private List<StampedCloudPoints> cloudPoints;
 
     private static class LiDarDataBaseHolder {
         private static LiDarDataBase instance = new LiDarDataBase();
@@ -27,7 +27,7 @@ public class LiDarDataBase {
         return LiDarDataBaseHolder.instance;
     }
 
-    public void addStampedCloudPoint(StampedCloudPoints points) {
-        cloudPoints.add(points);
+    public List<StampedCloudPoints> getCloudPoints() {
+        return cloudPoints;
     }
 }
