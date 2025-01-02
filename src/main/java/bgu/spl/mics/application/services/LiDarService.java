@@ -11,6 +11,7 @@ import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
+import bgu.spl.mics.application.objects.StatisticalFolder;
 import bgu.spl.mics.application.objects.TrackedObject;
 
 /**
@@ -25,7 +26,6 @@ public class LiDarService extends MicroService {
 
     // Fields
     private LiDarWorkerTracker liDarWorkerTracker;
-    private List<TrackedObject> trackedObjects;
     /**
      * Constructor for LiDarService.
      *
@@ -34,7 +34,6 @@ public class LiDarService extends MicroService {
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
         super("LiDAR_ID: " + LiDarWorkerTracker.getId());
         this.liDarWorkerTracker = LiDarWorkerTracker;
-        this.trackedObjects = new LinkedList<TrackedObject>();
     }
 
     /**
@@ -56,13 +55,12 @@ public class LiDarService extends MicroService {
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             liDarWorkerTracker.findTrackedObjects(tickBroadcast.getCurrentTime());
-            for(TrackedObject object : liDarWorkerTracker.getLastTrackedObjects()) {
-                if(object.getCoordinates() != null) {
-                    trackedObjects.add(object);
-                }
-            }
-            sendEvent(new TrackedObjectsEvent(getName(), trackedObjects));
-            trackedObjects.clear();
+
+            //maybe synchronize the following lines somehow
+            sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getLastTrackedObjects()));
+            StatisticalFolder.getInstance().incrementNumTrackedObjects(liDarWorkerTracker.getLastTrackedObjects().size());
+            ///////////
+            
             liDarWorkerTracker.getLastTrackedObjects().clear();
         });
 
