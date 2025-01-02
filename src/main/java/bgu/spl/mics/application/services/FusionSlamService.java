@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.objects.FusionSlam;
 
 /**
@@ -16,9 +18,12 @@ public class FusionSlamService extends MicroService {
      *
      * @param fusionSlam The FusionSLAM object responsible for managing the global map.
      */
+
+    private FusionSlam fusionSlam;
+    
     public FusionSlamService(FusionSlam fusionSlam) {
-        super("Change_This_Name");
-        // TODO Implement this
+        super("FusionSlamService");
+        this.fusionSlam = FusionSlam.getInstance();
     }
 
     /**
@@ -28,6 +33,12 @@ public class FusionSlamService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        subscribeBroadcast(CrashedBroadcast.class, (crashedBroadcast) -> {
+            this.fusionSlam.setCrashedSensorId(crashedBroadcast.getSensorID());
+            this.fusionSlam.setErrorDescription((crashedBroadcast.getCrashedBecause()));
+        });
+        subscribeBroadcast(TerminatedBroadcast.class, (terminatedBroadcast) -> {
+            
+        });
     }
 }

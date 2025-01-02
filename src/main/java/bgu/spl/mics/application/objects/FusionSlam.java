@@ -1,4 +1,5 @@
 package bgu.spl.mics.application.objects;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -9,11 +10,18 @@ import java.util.List;
 public class FusionSlam {
     private List<LandMark> landmarks; // Should be implemented as an array
     private List<Pose> poses; // List of previous poses needed for calculations
-
+    
+    private int activeSensors;
+    private String crashedSensorId;
+    private String errorDescription;
+    
     // Constructor
     private FusionSlam() {
         this.landmarks = landmarks;
         this.poses = poses;
+        // todo: initialize activeSensors
+        this.crashedSensorId = "";
+        this.errorDescription = "";
     }
 
     // Singleton instance holder
@@ -41,6 +49,20 @@ public class FusionSlam {
         this.poses = poses;
     }
 
-    
+    public String getCrashedSensorId() {
+        return crashedSensorId;
+    }
+
+    public void setCrashedSensorId(String crashedSensorId) {
+        this.crashedSensorId = crashedSensorId;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
+    }
 
 }
