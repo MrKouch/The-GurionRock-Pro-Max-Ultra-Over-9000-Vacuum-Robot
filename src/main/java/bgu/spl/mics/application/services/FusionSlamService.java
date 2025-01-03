@@ -29,7 +29,8 @@ public class FusionSlamService extends MicroService {
      *
      * @param fusionSlam The FusionSLAM object responsible for managing the global map.
      */
-    public FusionSlamService() {
+    
+    public FusionSlamService(FusionSlam fusionSlam) {
         super("FusionSlamService");
         this.fusionSlam = FusionSlam.getInstance();
     }
@@ -70,8 +71,9 @@ public class FusionSlamService extends MicroService {
 
         });
 
-       subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
-
-       }); 
+        subscribeBroadcast(CrashedBroadcast.class, (crashedBroadcast) -> {
+            this.fusionSlam.setCrashedSensorId(crashedBroadcast.getSensorID());
+            this.fusionSlam.setErrorDescription((crashedBroadcast.getCrashedBecause()));
+        });
     }
 }

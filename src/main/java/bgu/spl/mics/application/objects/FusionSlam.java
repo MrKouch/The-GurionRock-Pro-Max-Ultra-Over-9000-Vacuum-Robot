@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.objects;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -12,13 +13,20 @@ public class FusionSlam {
     private List<LandMark> landmarks; // Should be implemented as an array
     private List<Pose> poses; // List of previous poses needed for calculations
     private List<TrackedObject> waitingTrackedObjects;
+    private int activeSensors;
+    private String crashedSensorId;
+    private String errorDescription;
 
     // Constructor
     private FusionSlam() {
         this.landmarks = new ArrayList<>();
         this.poses = new ArrayList<>();
         this.waitingTrackedObjects = new LinkedList<>();
+         // todo: initialize activeSensors
+        this.crashedSensorId = "";
+        this.errorDescription = "";
     }
+    
 
     // Singleton instance holder
     private static class FusionSlamHolder {
@@ -99,5 +107,20 @@ public class FusionSlam {
 
 
     
+    public String getCrashedSensorId() {
+        return crashedSensorId;
+    }
+
+    public void setCrashedSensorId(String crashedSensorId) {
+        this.crashedSensorId = crashedSensorId;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
+    }
 
 }
