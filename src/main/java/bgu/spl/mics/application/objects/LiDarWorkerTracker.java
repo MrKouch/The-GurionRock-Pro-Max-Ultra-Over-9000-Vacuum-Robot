@@ -15,7 +15,9 @@ public class LiDarWorkerTracker {
     private STATUS status; // The status of the LiDar
     private List<StampedDetectedObjects> stampedDetectedObjects;
     private List<TrackedObject> waitingObjects;
-    private List<TrackedObject> lastTrackedObjects; // The last objects the LiDar tracked
+
+    //NO NEED?
+    //private List<TrackedObject> lastTrackedObjects; // The last objects the LiDar tracked
 
     // ADD FIELDS OR METHODS TO GET INFORMATION FROM THE LIDARDATABASE
 
@@ -26,7 +28,9 @@ public class LiDarWorkerTracker {
         this.status = STATUS.UP;
         this.stampedDetectedObjects = new LinkedList<>();
         this.waitingObjects = new LinkedList<>();
-        this.lastTrackedObjects = new LinkedList<TrackedObject>();
+        
+        //NO NEED?
+        //this.lastTrackedObjects = new LinkedList<TrackedObject>();
     }
 
     // Getters
@@ -42,9 +46,9 @@ public class LiDarWorkerTracker {
         return status;
     }
 
-    public List<TrackedObject> getLastTrackedObjects() {
-        return lastTrackedObjects;
-    }
+    // public List<TrackedObject> getLastTrackedObjects() {
+    //     return lastTrackedObjects;
+    // }
 
     public List<StampedDetectedObjects> getStampedDetectedObjects() {
         return stampedDetectedObjects;
@@ -67,23 +71,23 @@ public class LiDarWorkerTracker {
         for (StampedDetectedObjects objects : stampedDetectedObjects) {
             if(objects.getTime() + frequency <= currentTime) {
                 for (DetectedObject detectedObject : objects.getDetectedObjects()) {
-                    TrackedObject trackedObject = new TrackedObject(detectedObject, objects.getTime());
-                    waitingObjects.add(trackedObject);
+                    for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
+                        if(trackedObject.getId() == detectedObject.getId()) {
+                            waitingObjects.add(trackedObject);
+                        }
+                    }
                 }
-                StatisticalFolder.getInstance().incrementNumTrackedObjects(waitingObjects.size());
             }
         }
     }
 
-    public void updateLastTrackedObjects(int currentTime) {
-        StampedCloudPoints lastCloudPoints = LiDarDataBase.getInstance().getCloudPoints().get(currentTime);
-        if(lastCloudPoints != null) {
-            lastTrackedObjects.clear();
-            List<String> IDsByDetectionTime = LiDarDataBase.getInstance().getIDsByDetectionTime().get(currentTime);
-            for (String ID : IDsByDetectionTime) {
-                TrackedObject trackedObject = new TrackedObject(ID, currentTime, "LidarData has no description. get it from the camera data.", lastCloudPoints.getCloudPoints());
-                lastTrackedObjects.add(trackedObject);
+    public void updateStatistics(int currentTime) {
+        int newTracks = 0;
+        for (TrackedObject object : LiDarDataBase.getInstance().getTrackedObjects()) {
+            if(object.getTime() == currentTime) {
+                newTracks++;
             }
         }
+        StatisticalFolder.getInstance().incrementNumTrackedObjects(newTracks);
     }
 }

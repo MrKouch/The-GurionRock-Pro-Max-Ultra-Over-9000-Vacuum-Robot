@@ -12,8 +12,10 @@ public class Camera {
     private final int id; // The ID of the camera
     private int frequency; // Time interval at which the camera sends new events
     private STATUS status; // The status of the camera (Up, Down, Error)
-    private HashMap<Integer, StampedDetectedObjects> detectedObjects; // Time-stamped objects detected by the camera
-    private StampedDetectedObjects lastDetectedObjects;
+    private HashMap<Integer, StampedDetectedObjects> detectedObjects; // Time-stamped objects detected by the camera, will be initialized in the main program
+    
+    // NO NEED?
+    // private StampedDetectedObjects lastDetectedObjects;
 
 
     // Constructor
@@ -22,7 +24,9 @@ public class Camera {
         this.frequency = frequency;
         this.status = STATUS.UP;
         this.detectedObjects = new HashMap<>();
-        this.lastDetectedObjects = null;
+
+        // NO NEED?
+        // this.lastDetectedObjects = null;
     }
 
     public StampedDetectedObjects getReadyDetectedObjects(int currentTime) {
@@ -33,7 +37,8 @@ public class Camera {
     public void updateLastDetectedObjects(int currentTime) {
         StampedDetectedObjects objects = detectedObjects.get(currentTime);
         if(objects != null) {
-            lastDetectedObjects = objects;
+            // NO NEED?
+            // lastDetectedObjects = objects;
             StatisticalFolder.getInstance().incrementNumDetectedObjects(objects.getDetectedObjects().size());
         }
     }
@@ -63,8 +68,9 @@ public class Camera {
         return detectedObjects;
     }
 
-    public StampedDetectedObjects getLastDetectedObjects() {
-        return lastDetectedObjects;
-    }
+    // NO NEED?
+    // public StampedDetectedObjects getLastDetectedObjects() {
+    //     return lastDetectedObjects;
+    // }
 
 }

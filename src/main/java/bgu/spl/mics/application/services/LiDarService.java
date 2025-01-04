@@ -55,11 +55,11 @@ public class LiDarService extends MicroService {
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             int currentTime = tickBroadcast.getCurrentTime();
-            liDarWorkerTracker.updateLastTrackedObjects(currentTime);
+            liDarWorkerTracker.updateStatistics(currentTime);
             liDarWorkerTracker.detectedToTracked(currentTime);
             // Transfer the latest tracked objects data to the fusionSLAM using the message bus
             sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getWaitingObjects()));
-            // Update the statistical folder and empty the last tracked objects list
+            // Empty the last tracked objects list
             liDarWorkerTracker.getWaitingObjects().clear();
         });
 
