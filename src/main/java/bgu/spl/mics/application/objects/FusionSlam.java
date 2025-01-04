@@ -92,6 +92,10 @@ public class FusionSlam {
                 landmarkCoordinates.get(i).setX((newCloudPoints.get(i).getX() + landmarkCoordinates.get(i).getX())/2);
                 landmarkCoordinates.get(i).setY((newCloudPoints.get(i).getY() + landmarkCoordinates.get(i).getY())/2);
             }
+            // make sure
+            for(int i = landmarkCoordinates.size(); i < newCloudPoints.size(); i ++) {
+                landmarkCoordinates.add(newCloudPoints.get(i));
+            }
         }
     }
 

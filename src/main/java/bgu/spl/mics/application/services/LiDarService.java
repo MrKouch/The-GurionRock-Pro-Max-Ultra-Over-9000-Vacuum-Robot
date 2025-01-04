@@ -54,22 +54,17 @@ public class LiDarService extends MicroService {
         });
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
-            liDarWorkerTracker.findTrackedObjects(tickBroadcast.getCurrentTime());
-
-            //maybe synchronize the following lines somehow
-            sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getLastTrackedObjects()));
-            StatisticalFolder.getInstance().incrementNumTrackedObjects(liDarWorkerTracker.getLastTrackedObjects().size());
-            ///////////
-            
-            liDarWorkerTracker.getLastTrackedObjects().clear();
+            int currentTime = tickBroadcast.getCurrentTime();
+            liDarWorkerTracker.updateLastTrackedObjects(currentTime);
+            liDarWorkerTracker.detectedToTracked(currentTime);
+            // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+            sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getWaitingObjects()));
+            // Update the statistical folder and empty the last tracked objects list
+            liDarWorkerTracker.getWaitingObjects().clear();
         });
 
         subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
-            
-            for(DetectedObject detectedObject : detectObjectsEvent.getStampedDetectedObjects().getDetectedObjects()) {
-                TrackedObject trackedObject = new TrackedObject(detectedObject, detectObjectsEvent.getStampedDetectedObjects().getTime());
-                liDarWorkerTracker.getLastTrackedObjects().add(trackedObject);
-            }
+            liDarWorkerTracker.getStampedDetectedObjects().add(detectObjectsEvent.getStampedDetectedObjects());
         });
 
 
