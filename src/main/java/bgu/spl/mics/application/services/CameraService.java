@@ -71,7 +71,15 @@ public class CameraService extends MicroService {
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
-            System.out.println("Camera " + getName() + " is being terminated");
+            // make sure - what happens in terminate()?
+            if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
+                this.terminate();
+            }
+        });
+
+        // NOT SURE
+        subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            this.terminate();
         });
     }
 }

@@ -36,11 +36,21 @@ public class PoseService extends MicroService {
             Pose currentPose = gpsimu.getPoseByTick(tickBroadcast.getCurrentTime());
             sendEvent(new PoseEvent(currentPose));
         });
-        subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
-            terminate();
-        });
+
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             throw new RuntimeException("PoseService has crashed because " + crashedBroadcast.getCrashedBecause());
+        });
+
+        // NOT SURE
+        subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
+                this.terminate();
+            }
+        });
+
+        // NOT SURE
+        subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            this.terminate();
         });
     }
 }

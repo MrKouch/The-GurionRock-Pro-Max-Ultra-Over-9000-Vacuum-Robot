@@ -25,10 +25,11 @@ public abstract class MicroService implements Runnable {
 
     // Fields
     private boolean terminated = false;
+    private boolean crashed = false;
     private final String name;
     private MessageBus theBus;  // Reference to the singleton
-    private ConcurrentHashMap<Class<? extends Event<?>>, Callback<?>> eventsCallBacksDictionary;
-    private ConcurrentHashMap<Class<? extends Broadcast>, Callback<?>> broadcastsCallBacksDictionary;
+    private ConcurrentHashMap<Class<? extends Event<?>>, Callback<Message>> eventsCallBacksDictionary;
+    private ConcurrentHashMap<Class<? extends Broadcast>, Callback<Message>> broadcastsCallBacksDictionary;
 
 
     /**
@@ -167,10 +168,22 @@ public abstract class MicroService implements Runnable {
         initialize();
         theBus.register(this);
         while (!terminated) {
-            System.out.println("NOT IMPLEMENTED!!!"); //TODO: you should delete this line
-            // consumer producer design pattern
+            try {
+                Message msg = theBus.awaitMessage(this);
+                if (msg instanceof Event) {
+                    Callback<Message> cb = (Callback<Message>) eventsCallBacksDictionary.get(msg.getClass());
+                    cb.call(msg);
+                }
+                if (msg instanceof Broadcast) {
+                    Callback<Message> cb = (Callback<Message>) broadcastsCallBacksDictionary.get(msg.getClass());
+                    cb.call(msg);
+                }
+            } catch (InterruptedException e) {
+                // TODO: handle exception (probably parrallelism stuff)
+            } catch (IllegalStateException e) {
+                // TODO: handle exception - m is unregistered
+            }
         }
         theBus.unregister(this);
     }
-
 }

@@ -44,14 +44,6 @@ public class LiDarService extends MicroService {
     @Override
     protected void initialize() {
         System.out.println("LiDAR Service " + getName() + " has srarted");
-        // NOT SURE
-        subscribeBroadcast(TerminatedBroadcast.class, terminationEvent -> {
-            terminate();
-        });
-        // NOT SURE
-        subscribeBroadcast(CrashedBroadcast.class, stopNow -> {
-            throw new RuntimeException("LiDAR with ID: " + liDarWorkerTracker.getId() + "stops now because " + stopNow.getCrashedBecause());
-        });
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             liDarWorkerTracker.findTrackedObjects(tickBroadcast.getCurrentTime());
@@ -72,7 +64,17 @@ public class LiDarService extends MicroService {
             }
         });
 
+        // NOT SURE
+        subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
+                this.terminate();
+            }
+        });
 
+        // NOT SURE
+        subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            this.terminate();
+        });
 
     }
 }

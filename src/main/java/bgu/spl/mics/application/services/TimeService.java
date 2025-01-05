@@ -32,13 +32,19 @@ public class TimeService extends MicroService {
         sendBroadcast(new TickBroadcast(0));
         currentTick++;
         subscribeBroadcast(TickBroadcast.class, (tickBroadcast) -> {
-            if (currentTick == duration) {
+            if (currentTick == duration + 1) {
                 sendBroadcast(new TerminatedBroadcast(TimeService.class, "The time has reached the Duration limit."));
+                this.terminate();
             }
-            else if (currentTick < duration) {
+            else if (currentTick < duration + 1) {
                 sendBroadcast(new TickBroadcast(currentTick));
             }
             currentTick++;
+        });
+        subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            if (terminatedBroadcast.getServiceWhoTerminated() == FusionSlamService.class) {
+                this.terminate();
+            }
         });
     }
 }

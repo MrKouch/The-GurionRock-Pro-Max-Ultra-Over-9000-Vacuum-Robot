@@ -56,7 +56,9 @@ public class FusionSlam {
     public List<TrackedObject> getWaitingTrackedObjects() {
         return waitingTrackedObjects;
     }
-
+    public void clearWaitingTrackedObjects() {
+        waitingTrackedObjects.clear();
+    }
 
 
     private List<CloudPoint> calculateLandMarkCloudPoints(TrackedObject tracked, Pose pose) {
@@ -104,8 +106,6 @@ public class FusionSlam {
         return -1;
     }
 
-
-
     
     public String getCrashedSensorId() {
         return crashedSensorId;
@@ -121,6 +121,14 @@ public class FusionSlam {
 
     public void setErrorDescription(String errorDescription) {
         this.errorDescription = errorDescription;
+    }
+
+    public int getActiveSensors() {
+        return activeSensors;
+    }
+
+    public void setActiveSensors(int currActiveSensors) {
+        this.activeSensors = currActiveSensors;
     }
 
 }
