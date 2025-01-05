@@ -64,7 +64,7 @@ public class LiDarService extends MicroService {
         });
 
         subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
-            liDarWorkerTracker.getStampedDetectedObjects().add(detectObjectsEvent.getStampedDetectedObjects());
+            liDarWorkerTracker.getStampedDetectedObjects().add((detectObjectsEvent).getStampedDetectedObjects());
         });
 
 
