@@ -25,11 +25,10 @@ public abstract class MicroService implements Runnable {
 
     // Fields
     private boolean terminated = false;
-    private boolean crashed = false;
     private final String name;
     private MessageBus theBus;  // Reference to the singleton
-    private ConcurrentHashMap<Class<? extends Event<?>>, Callback<Message>> eventsCallBacksDictionary;
-    private ConcurrentHashMap<Class<? extends Broadcast>, Callback<Message>> broadcastsCallBacksDictionary;
+    private ConcurrentHashMap<Class<? extends Event<?>>, Callback<?>> eventsCallBacksDictionary;
+    private ConcurrentHashMap<Class<? extends Broadcast>, Callback<?>> broadcastsCallBacksDictionary;
 
 
     /**

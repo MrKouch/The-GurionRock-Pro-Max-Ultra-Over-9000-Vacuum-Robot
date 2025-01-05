@@ -35,11 +35,11 @@ public class FusionSlamService extends MicroService {
         this.fusionSlam = FusionSlam.getInstance();
     }
 
-    private void handleSensorTerminated() {
+    private void handleSensorTerminated(String whyTerminated) {
         int currActiveSensors = this.fusionSlam.getActiveSensors();
         this.fusionSlam.setActiveSensors(currActiveSensors - 1);
         if (currActiveSensors == 0) {
-            sendBroadcast(new TerminatedBroadcast(FusionSlamService.class, "Finished"));
+            sendBroadcast(new TerminatedBroadcast(FusionSlamService.class, whyTerminated));
             // download a report
             this.terminate();
         }
@@ -82,14 +82,14 @@ public class FusionSlamService extends MicroService {
                 this.terminate();
             }
             else {
-                handleSensorTerminated();
+                handleSensorTerminated("finished");
             }
         });
 
         subscribeBroadcast(CrashedBroadcast.class, (crashedBroadcast) -> {
             this.fusionSlam.setCrashedSensorId(crashedBroadcast.getSensorID());
             this.fusionSlam.setErrorDescription((crashedBroadcast.getCrashedBecause()));
-            handleSensorTerminated();
+            handleSensorTerminated(crashedBroadcast.getCrashedBecause());
         });
     }
 }

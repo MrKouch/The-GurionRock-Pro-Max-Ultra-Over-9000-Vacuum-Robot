@@ -10,13 +10,23 @@ public class GPSIMU {
     private int currentTick; // The current time
     private STATUS status; // Status of the GPS and IMU
     private List<Pose> poseList; // List of time-stamped poses
-
+    private int latestDetectionTime;
 
     // Constructor
     public GPSIMU(int currentTick, STATUS status, List<Pose> poseList) {
         this.currentTick = currentTick;
         this.status = status;
         this.poseList = poseList;
+        this.latestDetectionTime = computeLatestDetectionTime();
+    }
+
+    private int computeLatestDetectionTime() {
+        int maxTime = 0;
+        for (Pose pose : poseList) { 
+            if (pose.getTime() > maxTime)
+                maxTime = pose.getTime();
+        } 
+        return maxTime;
     }
 
     // Getters and Setters
@@ -44,6 +54,9 @@ public class GPSIMU {
         return getPoseList().get(tick);
     }
 
+    public int getLatestDetectionTime() {
+        return latestDetectionTime;
+    }
 
 }
 

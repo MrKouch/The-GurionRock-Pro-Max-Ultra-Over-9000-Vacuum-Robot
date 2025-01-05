@@ -40,6 +40,12 @@ public class TimeService extends MicroService {
                 sendBroadcast(new TickBroadcast(currentTick));
             }
             currentTick++;
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e) {
+                //
+            }
+            
         });
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
             if (terminatedBroadcast.getServiceWhoTerminated() == FusionSlamService.class) {

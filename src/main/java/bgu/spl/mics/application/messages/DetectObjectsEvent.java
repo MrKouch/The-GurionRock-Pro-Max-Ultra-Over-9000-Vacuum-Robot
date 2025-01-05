@@ -6,7 +6,7 @@ import bgu.spl.mics.Event;
 public class DetectObjectsEvent implements Event<Boolean> {
     
     // Fields
-    StampedDetectedObjects stampedDetectedObjects;
+    private StampedDetectedObjects stampedDetectedObjects;
     
     
     public DetectObjectsEvent(StampedDetectedObjects DetectedObjects) {

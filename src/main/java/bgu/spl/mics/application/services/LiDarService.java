@@ -46,33 +46,34 @@ public class LiDarService extends MicroService {
         System.out.println("LiDAR Service " + getName() + " has srarted");
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
-            liDarWorkerTracker.findTrackedObjects(tickBroadcast.getCurrentTime());
-
-            //maybe synchronize the following lines somehow
-            sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getLastTrackedObjects()));
-            StatisticalFolder.getInstance().incrementNumTrackedObjects(liDarWorkerTracker.getLastTrackedObjects().size());
-            ///////////
-            
-            liDarWorkerTracker.getLastTrackedObjects().clear();
+            int currentTime = tickBroadcast.getCurrentTime();
+            if (currentTime > liDarWorkerTracker.getLatestDetectionTime() + liDarWorkerTracker.getFrequency()) {
+                sendBroadcast(new TerminatedBroadcast(LiDarService.class, liDarWorkerTracker.getId() + " finished"));
+                this.terminate();
+            }
+            liDarWorkerTracker.updateStatistics(currentTime);
+            liDarWorkerTracker.detectedToTracked(currentTime);
+            // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+            sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getWaitingObjects()));
+            // Empty the last tracked objects list
+            liDarWorkerTracker.getWaitingObjects().clear();
         });
 
         subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
-            
-            for(DetectedObject detectedObject : detectObjectsEvent.getStampedDetectedObjects().getDetectedObjects()) {
-                TrackedObject trackedObject = new TrackedObject(detectedObject, detectObjectsEvent.getStampedDetectedObjects().getTime());
-                liDarWorkerTracker.getLastTrackedObjects().add(trackedObject);
-            }
+            liDarWorkerTracker.getStampedDetectedObjects().add(detectObjectsEvent.getStampedDetectedObjects());
         });
 
         // NOT SURE
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
             if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
+                sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - The time has reached the Duration limit."));
                 this.terminate();
             }
         });
 
         // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - other sensor has been creshed."));
             this.terminate();
         });
 
