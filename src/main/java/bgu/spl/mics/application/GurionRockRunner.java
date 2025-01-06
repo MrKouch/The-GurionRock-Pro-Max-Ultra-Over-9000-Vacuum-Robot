@@ -1,32 +1,14 @@
 package bgu.spl.mics.application;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import bgu.spl.mics.application.objects.Camera;
-import bgu.spl.mics.application.objects.CloudPoint;
-import bgu.spl.mics.application.objects.GPSIMU;
 import bgu.spl.mics.application.objects.Input;
-import bgu.spl.mics.application.objects.LiDarDataBase;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
-import bgu.spl.mics.application.objects.Pose;
-import bgu.spl.mics.application.objects.STATUS;
-import bgu.spl.mics.application.objects.StampedDetectedObjects;
-import bgu.spl.mics.application.objects.TrackedObject;
-import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.services.CameraService;
 import bgu.spl.mics.application.services.LiDarService;
 import bgu.spl.mics.application.services.TimeService;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The main entry point for the GurionRock Pro Max Ultra Over 9000 simulation.
@@ -44,6 +26,10 @@ public class GurionRockRunner {
  * @param args Command-line arguments. The first argument is expected to be the path to the configuration file.
  */
     public static void main(String[] args) {
+        //TODO: make sure that the TimeService thread starts last.
+        //TODO: create the fusionSlam thread
+        //TODO: run examples
+        
         if (args.length == 0) {
             System.err.println("Error: Configuration file path not provided.");
             return;
@@ -52,13 +38,6 @@ public class GurionRockRunner {
         try {
             // Parse the input configuration
             Input input = new Input(args[0]);
-
-            // Create and start TimeService
-            int tickTime = input.getTickTime();
-            int duration = input.getDuration();
-            TimeService timeService = new TimeService(tickTime, duration);
-            Thread timeServiceThread = new Thread(timeService);
-            timeServiceThread.start();
 
             // Create and start CameraServices
             List<Thread> serviceThreads = new ArrayList<>();
@@ -76,6 +55,13 @@ public class GurionRockRunner {
                 lidarThread.start();
                 serviceThreads.add(lidarThread);
             }
+
+            // Create and start TimeService
+            int tickTime = input.getTickTime();
+            int duration = input.getDuration();
+            TimeService timeService = new TimeService(tickTime, duration);
+            Thread timeServiceThread = new Thread(timeService);
+            timeServiceThread.start();
 
             // Wait for the simulation to finish
             timeServiceThread.join(); // Wait for TimeService to complete
