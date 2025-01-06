@@ -35,6 +35,16 @@ public class FusionSlamService extends MicroService {
         this.fusionSlam = FusionSlam.getInstance();
     }
 
+    private void handleSensorTerminated(String whyTerminated) {
+        int currActiveSensors = this.fusionSlam.getActiveSensors();
+        this.fusionSlam.setActiveSensors(currActiveSensors - 1);
+        if (currActiveSensors == 0) {
+            sendBroadcast(new TerminatedBroadcast(FusionSlamService.class, whyTerminated));
+            // download a report
+            this.terminate();
+        }
+    }
+
     /**
      * Initializes the FusionSlamService.
      * Registers the service to handle TrackedObjectsEvents, PoseEvents, and TickBroadcasts,
@@ -43,7 +53,6 @@ public class FusionSlamService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, tickBroadCast -> {
-            
         });
 
         subscribeEvent(TrackedObjectsEvent.class, trackedObjectsEvent -> {
@@ -65,15 +74,22 @@ public class FusionSlamService extends MicroService {
                 fusionSlam.addOrUpdateLandMark(object, currPose);
                 //fusionSlam.addOrUpdateLandMark(object, fusionSlam.getposes().get(object.getTime()));
             }
+            fusionSlam.clearWaitingTrackedObjects();
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
-
+            if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
+                this.terminate();
+            }
+            else {
+                handleSensorTerminated("finished");
+            }
         });
 
         subscribeBroadcast(CrashedBroadcast.class, (crashedBroadcast) -> {
             this.fusionSlam.setCrashedSensorId(crashedBroadcast.getSensorID());
             this.fusionSlam.setErrorDescription((crashedBroadcast.getCrashedBecause()));
+            handleSensorTerminated(crashedBroadcast.getCrashedBecause());
         });
     }
 }

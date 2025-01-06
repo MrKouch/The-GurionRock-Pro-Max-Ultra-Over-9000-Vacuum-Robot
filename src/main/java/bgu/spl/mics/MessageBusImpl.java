@@ -2,6 +2,10 @@ package bgu.spl.mics;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -16,7 +20,7 @@ public class MessageBusImpl implements MessageBus {
     // Fields
     private ConcurrentHashMap<Class<? extends Event<?>>, LinkedBlockingQueue<MicroService>> eventsSubscribers;
     private ConcurrentHashMap<Class<? extends Broadcast>, LinkedBlockingQueue<MicroService>> broadcastsSubscribers;
-    private ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> microServicesMessages;
+    private ConcurrentHashMap<MicroService, LinkedBlockingDeque<Message>> microServicesMessages;
     private ConcurrentHashMap<Event<?>, Future<?>> eventsFutures;
 
     private MessageBusImpl() {
@@ -63,15 +67,20 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void sendBroadcast(Broadcast b) {
         Iterator<MicroService> bSubscribers = broadcastsSubscribers.get(b.getClass()).iterator();
-        while (bSubscribers.hasNext())  
-            microServicesMessages.get(bSubscribers.next()).add(b);
+        while (bSubscribers.hasNext()) {
+            MicroService m = bSubscribers.next();
+            if (b instanceof CrashedBroadcast)
+                microServicesMessages.get(m).addFirst(b);
+            else
+                microServicesMessages.get(m).addLast(b);
+        }  
     }
 
     
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
         MicroService m = eventsSubscribers.get(e.getClass()).remove();
-        microServicesMessages.get(m).add(e);
+        microServicesMessages.get(m).addLast(e);
         eventsSubscribers.get(e.getClass()).add(m);
 
         Future<T> future = new Future<T>();
@@ -81,13 +90,11 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void register(MicroService m) {
-        microServicesMessages.put(m, new LinkedBlockingQueue<Message>());
+        microServicesMessages.put(m, new LinkedBlockingDeque<Message>());
     }
 
     @Override
     public void unregister(MicroService m) {
-        microServicesMessages.remove(m);
-
         Enumeration<Class<? extends Event<?>>> eventsEnu = eventsSubscribers.keys();
         while (eventsEnu.hasMoreElements()) { 
 			LinkedBlockingQueue<MicroService> currentQ = eventsSubscribers.get(eventsEnu.nextElement());
@@ -103,7 +110,7 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
-        LinkedBlockingQueue<Message> queue = microServicesMessages.get(m);
+        LinkedBlockingDeque<Message> queue = microServicesMessages.get(m);
 		if(queue == null) {
 			throw new IllegalStateException("MicroService is not registered");
 		}

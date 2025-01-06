@@ -44,4 +44,8 @@ public class LiDarDataBase {
         return trackedObjects;
     }
 
+    public void setTrackedObjects(List<TrackedObject> trackedObjects) {
+        this.trackedObjects = trackedObjects;
+    }
+
 }

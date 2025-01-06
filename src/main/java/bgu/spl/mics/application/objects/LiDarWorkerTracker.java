@@ -15,22 +15,29 @@ public class LiDarWorkerTracker {
     private STATUS status; // The status of the LiDar
     private List<StampedDetectedObjects> stampedDetectedObjects;
     private List<TrackedObject> waitingObjects;
-
-    //NO NEED?
-    //private List<TrackedObject> lastTrackedObjects; // The last objects the LiDar tracked
-
-    // ADD FIELDS OR METHODS TO GET INFORMATION FROM THE LIDARDATABASE
+    private int latestDetectionTime;
+    private boolean isFaulty;
+    private int earliestErrorTime;
 
     // Constructor
-    public LiDarWorkerTracker(String id, int frequency) {
+    public LiDarWorkerTracker(String id, int frequency, List<StampedDetectedObjects> stampedDetectedObjects, boolean isFaulty, int earliestErrorTime) {
         this.id = id;
         this.frequency = frequency;
         this.status = STATUS.UP;
-        this.stampedDetectedObjects = new LinkedList<>();
+        this.stampedDetectedObjects = stampedDetectedObjects;
         this.waitingObjects = new LinkedList<>();
-        
-        //NO NEED?
-        //this.lastTrackedObjects = new LinkedList<TrackedObject>();
+        this.latestDetectionTime = computeLatestDetectionTime();
+        this.isFaulty = isFaulty;
+        this.earliestErrorTime = earliestErrorTime;
+    }
+
+    private int computeLatestDetectionTime() {
+        int maxTime = 0;
+        for (TrackedObject detectedObject : LiDarDataBase.getInstance().getTrackedObjects()) { 
+            if (detectedObject.getTime() > maxTime)
+                maxTime = detectedObject.getTime();
+        }
+        return maxTime;
     }
 
     // Getters
@@ -46,9 +53,9 @@ public class LiDarWorkerTracker {
         return status;
     }
 
-    // public List<TrackedObject> getLastTrackedObjects() {
-    //     return lastTrackedObjects;
-    // }
+    public int getLatestDetectionTime() {
+        return latestDetectionTime;
+    }
 
     public List<StampedDetectedObjects> getStampedDetectedObjects() {
         return stampedDetectedObjects;
@@ -65,6 +72,14 @@ public class LiDarWorkerTracker {
 
     public void setStatus(STATUS status) {
         this.status = status;
+    }
+
+    public boolean isFaulty() {
+        return isFaulty;
+    }
+
+    public int getEarliestErrorTime() {
+        return earliestErrorTime;
     }
 
     public void detectedToTracked(int currentTime) {

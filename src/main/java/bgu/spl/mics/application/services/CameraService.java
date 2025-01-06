@@ -40,6 +40,10 @@ public class CameraService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             //System.out.println("Camera " + getName() + " got a new TickBroadcast");
             int currentTime = tickBroadcast.getCurrentTime();
+            if (currentTime > camera.getLatestDetectionTime() + camera.getFrequency()) {
+                sendBroadcast(new TerminatedBroadcast(CameraService.class, camera.getId() + " finished"));
+                this.terminate();
+            }
             camera.updateLastDetectedObjects(currentTime);
             StampedDetectedObjects readyDetectedObjects = camera.getReadyDetectedObjects(currentTime);
             if (readyDetectedObjects != null) {
@@ -61,7 +65,17 @@ public class CameraService extends MicroService {
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
-            System.out.println("Camera " + getName() + " is being terminated");
+            // make sure - what happens in terminate()?
+            if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
+                sendBroadcast(new TerminatedBroadcast(CameraService.class, "camera - The time has reached the Duration limit."));
+                this.terminate();
+            }
+        });
+
+        // NOT SURE
+        subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            sendBroadcast(new TerminatedBroadcast(CameraService.class, "camera - other sensor has been creshed."));
+            this.terminate();
         });
     }
 }

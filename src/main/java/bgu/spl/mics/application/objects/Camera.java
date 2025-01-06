@@ -1,7 +1,5 @@
 package bgu.spl.mics.application.objects;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 /**
  * Represents a camera sensor on the robot.
  * Responsible for detecting objects in the environment.
@@ -13,20 +11,29 @@ public class Camera {
     private int frequency; // Time interval at which the camera sends new events
     private STATUS status; // The status of the camera (Up, Down, Error)
     private HashMap<Integer, StampedDetectedObjects> detectedObjects; // Time-stamped objects detected by the camera, will be initialized in the main program
-    
-    // NO NEED?
-    // private StampedDetectedObjects lastDetectedObjects;
+    private int latestDetectionTime; // latest time of detection of the camera
+    private boolean isFaulty; // is there an error object in the data
+    private int earliestErrorTime;  // time of first error
 
 
     // Constructor
-    public Camera(int id, int frequency, STATUS status) {
+    public Camera(int id, int frequency, STATUS status, HashMap<Integer, StampedDetectedObjects> detectedObjects, boolean isFaulty, int earliestErrorTime) {
         this.id = id;
         this.frequency = frequency;
-        this.status = STATUS.UP;
-        this.detectedObjects = new HashMap<>();
+        this.status = status;
+        this.detectedObjects = detectedObjects;
+        this.latestDetectionTime = computeLatestDetectionTime();
+        this.isFaulty = isFaulty;
+        this.earliestErrorTime = earliestErrorTime;
+    }
 
-        // NO NEED?
-        // this.lastDetectedObjects = null;
+    private int computeLatestDetectionTime() {
+        int maxTime = 0;
+        for (int time : detectedObjects.keySet()) {
+            if (time > maxTime)
+                maxTime = time;
+        }
+        return maxTime;
     }
 
     public StampedDetectedObjects getReadyDetectedObjects(int currentTime) {
@@ -68,9 +75,16 @@ public class Camera {
         return detectedObjects;
     }
 
-    // NO NEED?
-    // public StampedDetectedObjects getLastDetectedObjects() {
-    //     return lastDetectedObjects;
-    // }
+    public int getLatestDetectionTime() {
+        return latestDetectionTime;
+    }
+
+    public int getEarliestErrorTime() {
+        return earliestErrorTime;
+    }
+
+    public boolean isFaulty() {
+        return isFaulty;
+    }
 
 }

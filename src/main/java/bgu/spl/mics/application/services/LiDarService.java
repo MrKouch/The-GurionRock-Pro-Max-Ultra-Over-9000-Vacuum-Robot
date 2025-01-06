@@ -44,17 +44,13 @@ public class LiDarService extends MicroService {
     @Override
     protected void initialize() {
         System.out.println("LiDAR Service " + getName() + " has srarted");
-        // NOT SURE
-        subscribeBroadcast(TerminatedBroadcast.class, terminationEvent -> {
-            terminate();
-        });
-        // NOT SURE
-        subscribeBroadcast(CrashedBroadcast.class, stopNow -> {
-            throw new RuntimeException("LiDAR with ID: " + liDarWorkerTracker.getId() + "stops now because " + stopNow.getCrashedBecause());
-        });
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             int currentTime = tickBroadcast.getCurrentTime();
+            if (currentTime > liDarWorkerTracker.getLatestDetectionTime() + liDarWorkerTracker.getFrequency()) {
+                sendBroadcast(new TerminatedBroadcast(LiDarService.class, liDarWorkerTracker.getId() + " finished"));
+                this.terminate();
+            }
             liDarWorkerTracker.updateStatistics(currentTime);
             liDarWorkerTracker.detectedToTracked(currentTime);
             // Transfer the latest tracked objects data to the fusionSLAM using the message bus
@@ -67,7 +63,19 @@ public class LiDarService extends MicroService {
             liDarWorkerTracker.getStampedDetectedObjects().add((detectObjectsEvent).getStampedDetectedObjects());
         });
 
+        // NOT SURE
+        subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
+                sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - The time has reached the Duration limit."));
+                this.terminate();
+            }
+        });
 
+        // NOT SURE
+        subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - other sensor has been creshed."));
+            this.terminate();
+        });
 
     }
 }
