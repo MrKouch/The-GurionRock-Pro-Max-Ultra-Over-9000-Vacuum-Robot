@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.application.objects.Camera;
+import bgu.spl.mics.application.objects.STATUS;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.objects.StatisticalFolder;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
@@ -42,25 +43,33 @@ public class CameraService extends MicroService {
             int currentTime = tickBroadcast.getCurrentTime();
             if (currentTime > camera.getLatestDetectionTime() + camera.getFrequency()) {
                 sendBroadcast(new TerminatedBroadcast(CameraService.class, camera.getId() + " finished"));
+                camera.setStatus(STATUS.DOWN);
                 this.terminate();
             }
-            camera.updateLastDetectedObjects(currentTime);
-            StampedDetectedObjects readyDetectedObjects = camera.getReadyDetectedObjects(currentTime);
-            if (readyDetectedObjects != null) {
-                Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
-                if (futureObject != null) {
-                //     // the futureObject.get() is a blocking method - make sure it's okay
-                //     Boolean resolved = futureObject.get();
-                //     if (resolved) {
-                //         System.out.println("The object's coordinations has been successfully processed by a LiDARWorker and the Fusion.");
-                //     }
-                //     else {
-                //         System.out.println("FAILED: The object's coordinations has not been successfully processed by a LiDARWorker and the Fusion.");
-                //     }
-                // }
-                // else {
-                //     System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
-                 }
+            if (currentTime == camera.getEarliestErrorTime() && camera.getIsFaulty()) {
+                sendBroadcast(new CrashedBroadcast("camera" + camera.getId(), "camera" + camera.getId() + " crashed"));
+                camera.setStatus(STATUS.ERROR);
+                this.terminate();
+            }
+            if (currentTime < camera.getEarliestErrorTime()) {
+                camera.updateLastDetectedObjects(currentTime);
+                StampedDetectedObjects readyDetectedObjects = camera.getReadyDetectedObjects(currentTime);
+                if (readyDetectedObjects != null) {
+                    Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
+                    if (futureObject != null) {
+                    //     // the futureObject.get() is a blocking method - make sure it's okay
+                    //     Boolean resolved = futureObject.get();
+                    //     if (resolved) {
+                    //         System.out.println("The object's coordinations has been successfully processed by a LiDARWorker and the Fusion.");
+                    //     }
+                    //     else {
+                    //         System.out.println("FAILED: The object's coordinations has not been successfully processed by a LiDARWorker and the Fusion.");
+                    //     }
+                    // }
+                    // else {
+                    //     System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
+                     }
+                }
             }
         });
 
@@ -68,6 +77,7 @@ public class CameraService extends MicroService {
             // make sure - what happens in terminate()?
             if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
                 sendBroadcast(new TerminatedBroadcast(CameraService.class, "camera - The time has reached the Duration limit."));
+                camera.setStatus(STATUS.DOWN);
                 this.terminate();
             }
         });
@@ -75,6 +85,7 @@ public class CameraService extends MicroService {
         // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             sendBroadcast(new TerminatedBroadcast(CameraService.class, "camera - other sensor has been creshed."));
+            camera.setStatus(STATUS.DOWN);
             this.terminate();
         });
     }

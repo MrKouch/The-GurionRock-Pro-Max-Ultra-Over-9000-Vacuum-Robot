@@ -11,6 +11,7 @@ import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
+import bgu.spl.mics.application.objects.STATUS;
 import bgu.spl.mics.application.objects.StatisticalFolder;
 import bgu.spl.mics.application.objects.TrackedObject;
 
@@ -49,14 +50,22 @@ public class LiDarService extends MicroService {
             int currentTime = tickBroadcast.getCurrentTime();
             if (currentTime > liDarWorkerTracker.getLatestDetectionTime() + liDarWorkerTracker.getFrequency()) {
                 sendBroadcast(new TerminatedBroadcast(LiDarService.class, liDarWorkerTracker.getId() + " finished"));
+                liDarWorkerTracker.setStatus(STATUS.DOWN);
                 this.terminate();
             }
-            liDarWorkerTracker.updateStatistics(currentTime);
-            liDarWorkerTracker.detectedToTracked(currentTime);
-            // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-            sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getWaitingObjects()));
-            // Empty the last tracked objects list
-            liDarWorkerTracker.getWaitingObjects().clear();
+            if (currentTime == liDarWorkerTracker.getEarliestErrorTime() && liDarWorkerTracker.getIsFaulty()) {
+                sendBroadcast(new CrashedBroadcast("liDarWorkerTracker" + liDarWorkerTracker.getId(), "liDarWorkerTracker" + liDarWorkerTracker.getId() + " crashed"));
+                liDarWorkerTracker.setStatus(STATUS.ERROR);
+                this.terminate();
+            }
+            if (currentTime < liDarWorkerTracker.getEarliestErrorTime()) {
+                liDarWorkerTracker.updateStatistics(currentTime);
+                liDarWorkerTracker.detectedToTracked(currentTime);
+                // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+                sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getWaitingObjects()));
+                // Empty the last tracked objects list
+                liDarWorkerTracker.getWaitingObjects().clear();
+            }
         });
 
         subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
@@ -67,6 +76,7 @@ public class LiDarService extends MicroService {
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
             if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
                 sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - The time has reached the Duration limit."));
+                liDarWorkerTracker.setStatus(STATUS.DOWN);
                 this.terminate();
             }
         });
@@ -74,6 +84,7 @@ public class LiDarService extends MicroService {
         // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - other sensor has been creshed."));
+            liDarWorkerTracker.setStatus(STATUS.DOWN);
             this.terminate();
         });
 

@@ -14,21 +14,23 @@ public class Camera {
     private STATUS status; // The status of the camera (Up, Down, Error)
     private HashMap<Integer, StampedDetectedObjects> detectedObjects; // Time-stamped objects detected by the camera, will be initialized in the main program
     private int latestDetectionTime;
+    private boolean isFaulty;
+    private int earliestErrorTime;
+
     
     // NO NEED?
     // private StampedDetectedObjects lastDetectedObjects;
 
 
     // Constructor
-    public Camera(int id, int frequency, STATUS status) {
+    public Camera(int id, int frequency, STATUS status, int earliestErrorTime, boolean isFaulty) {
         this.id = id;
         this.frequency = frequency;
         this.status = STATUS.UP;
         this.detectedObjects = new HashMap<>();
         this.latestDetectionTime = computeLatestDetectionTime();
-
-        // NO NEED?
-        // this.lastDetectedObjects = null;
+        this.earliestErrorTime = earliestErrorTime;
+        this.isFaulty = isFaulty;
     }
 
     private int computeLatestDetectionTime() {
@@ -41,15 +43,13 @@ public class Camera {
     }
 
     public StampedDetectedObjects getReadyDetectedObjects(int currentTime) {
-        return detectedObjects.get(currentTime - frequency);
+        return currentTime >= frequency ? detectedObjects.get(currentTime - frequency) : null;
     }
 
     // Updates the last detected objects and sends the data to the statistical folder
     public void updateLastDetectedObjects(int currentTime) {
         StampedDetectedObjects objects = detectedObjects.get(currentTime);
-        if(objects != null) {
-            // NO NEED?
-            // lastDetectedObjects = objects;
+        if (objects != null) {
             StatisticalFolder.getInstance().incrementNumDetectedObjects(objects.getDetectedObjects().size());
         }
     }
@@ -82,6 +82,15 @@ public class Camera {
     public int getLatestDetectionTime() {
         return latestDetectionTime;
     }
+
+    public int getEarliestErrorTime() {
+        return earliestErrorTime;
+    }
+
+    public boolean getIsFaulty() {
+        return isFaulty;
+    }
+    
 
     // NO NEED?
     // public StampedDetectedObjects getLastDetectedObjects() {

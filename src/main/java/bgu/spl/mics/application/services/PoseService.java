@@ -7,6 +7,7 @@ import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.GPSIMU;
 import bgu.spl.mics.application.objects.Pose;
+import bgu.spl.mics.application.objects.STATUS;
 
 /**
  * PoseService is responsible for maintaining the robot's current pose (position and orientation)
@@ -36,6 +37,7 @@ public class PoseService extends MicroService {
             int currentTime = tickBroadcast.getCurrentTime();
             if (currentTime > gpsimu.getLatestDetectionTime()) {
                 sendBroadcast(new TerminatedBroadcast(PoseService.class, "pose - finished"));
+                gpsimu.setStatus(STATUS.DOWN);
                 this.terminate();
             }
             Pose currentPose = gpsimu.getPoseByTick(currentTime);
@@ -46,6 +48,7 @@ public class PoseService extends MicroService {
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
             if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
                 sendBroadcast(new TerminatedBroadcast(PoseService.class, "pose - The time has reached the Duration limit."));
+                gpsimu.setStatus(STATUS.DOWN);
                 this.terminate();
             }
         });
@@ -53,6 +56,7 @@ public class PoseService extends MicroService {
         // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             sendBroadcast(new TerminatedBroadcast(PoseService.class, "pose - other sensor has been creshed."));
+            gpsimu.setStatus(STATUS.DOWN);
             this.terminate();
         });
     }

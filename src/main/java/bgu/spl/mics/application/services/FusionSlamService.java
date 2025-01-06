@@ -52,9 +52,6 @@ public class FusionSlamService extends MicroService {
      */
     @Override
     protected void initialize() {
-        subscribeBroadcast(TickBroadcast.class, tickBroadCast -> {
-        });
-
         subscribeEvent(TrackedObjectsEvent.class, trackedObjectsEvent -> {
             for(TrackedObject object : trackedObjectsEvent.getTrackedObjects()) {
                 Pose currentPose = fusionSlam.getposes().get(object.getTime());
