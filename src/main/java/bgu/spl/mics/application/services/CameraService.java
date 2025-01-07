@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.Future;
+import bgu.spl.mics.Message;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.STATUS;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
@@ -41,35 +42,20 @@ public class CameraService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             //System.out.println("Camera " + getName() + " got a new TickBroadcast");
             int currentTime = tickBroadcast.getCurrentTime();
-            if (currentTime > camera.getLatestDetectionTime() + camera.getFrequency()) {
-                sendBroadcast(new TerminatedBroadcast(CameraService.class, camera.getId() + " finished"));
+            Message msg = camera.operateTick(currentTime);
+            if (msg instanceof TerminatedBroadcast) {
+                sendBroadcast((TerminatedBroadcast)msg);
                 camera.setStatus(STATUS.DOWN);
                 this.terminate();
             }
-            if (currentTime == camera.getEarliestErrorTime() && camera.getIsFaulty()) {
-                sendBroadcast(new CrashedBroadcast("camera" + camera.getId(), "camera" + camera.getId() + " crashed"));
+            else if (msg instanceof CrashedBroadcast) {
+                sendBroadcast((CrashedBroadcast)msg);
                 camera.setStatus(STATUS.ERROR);
                 this.terminate();
+
             }
-            if (currentTime < camera.getEarliestErrorTime()) {
-                camera.updateLastDetectedObjects(currentTime);
-                StampedDetectedObjects readyDetectedObjects = camera.getReadyDetectedObjects(currentTime);
-                if (readyDetectedObjects != null) {
-                    Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
-                    if (futureObject != null) {
-                    //     // the futureObject.get() is a blocking method - make sure it's okay
-                    //     Boolean resolved = futureObject.get();
-                    //     if (resolved) {
-                    //         System.out.println("The object's coordinations has been successfully processed by a LiDARWorker and the Fusion.");
-                    //     }
-                    //     else {
-                    //         System.out.println("FAILED: The object's coordinations has not been successfully processed by a LiDARWorker and the Fusion.");
-                    //     }
-                    // }
-                    // else {
-                    //     System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
-                     }
-                }
+            else if (msg instanceof DetectObjectsEvent) {
+                Future<Boolean> futureObject = sendEvent((DetectObjectsEvent)msg);
             }
         });
 

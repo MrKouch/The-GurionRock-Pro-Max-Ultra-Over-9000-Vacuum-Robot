@@ -19,23 +19,16 @@ public class LiDarWorkerTracker {
     private boolean isFaulty;
     private int earliestErrorTime;
 
-    //NO NEED?
-    //private List<TrackedObject> lastTrackedObjects; // The last objects the LiDar tracked
-
-    // ADD FIELDS OR METHODS TO GET INFORMATION FROM THE LIDARDATABASE
-
     // Constructor
-    public LiDarWorkerTracker(String id, int frequency, int earliestErrorTime, boolean isFaulty) {
+    public LiDarWorkerTracker(String id, int frequency, List<StampedDetectedObjects> stampedDetectedObjects, boolean isFaulty, int earliestErrorTime) {
         this.id = id;
         this.frequency = frequency;
         this.status = STATUS.UP;
-        this.stampedDetectedObjects = new LinkedList<>();
+        this.stampedDetectedObjects = stampedDetectedObjects;
         this.waitingObjects = new LinkedList<>();
         this.latestDetectionTime = computeLatestDetectionTime();
-        this.earliestErrorTime = earliestErrorTime;
         this.isFaulty = isFaulty;
-        //NO NEED?
-        //this.lastTrackedObjects = new LinkedList<TrackedObject>();
+        this.earliestErrorTime = earliestErrorTime;
     }
 
     private int computeLatestDetectionTime() {
@@ -64,18 +57,6 @@ public class LiDarWorkerTracker {
         return latestDetectionTime;
     }
 
-    public int getEarliestErrorTime() {
-        return earliestErrorTime;
-    }
-
-    public boolean getIsFaulty() {
-        return isFaulty;
-    }
-
-    // public List<TrackedObject> getLastTrackedObjects() {
-    //     return lastTrackedObjects;
-    // }
-
     public List<StampedDetectedObjects> getStampedDetectedObjects() {
         return stampedDetectedObjects;
     }
@@ -91,6 +72,14 @@ public class LiDarWorkerTracker {
 
     public void setStatus(STATUS status) {
         this.status = status;
+    }
+
+    public boolean isFaulty() {
+        return isFaulty;
+    }
+
+    public int getEarliestErrorTime() {
+        return earliestErrorTime;
     }
 
     public void detectedToTracked(int currentTime) {

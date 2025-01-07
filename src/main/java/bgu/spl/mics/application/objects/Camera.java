@@ -1,7 +1,12 @@
 package bgu.spl.mics.application.objects;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+
+import bgu.spl.mics.Future;
+import bgu.spl.mics.Message;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.services.CameraService;
 /**
  * Represents a camera sensor on the robot.
  * Responsible for detecting objects in the environment.
@@ -13,24 +18,20 @@ public class Camera {
     private int frequency; // Time interval at which the camera sends new events
     private STATUS status; // The status of the camera (Up, Down, Error)
     private HashMap<Integer, StampedDetectedObjects> detectedObjects; // Time-stamped objects detected by the camera, will be initialized in the main program
-    private int latestDetectionTime;
-    private boolean isFaulty;
-    private int earliestErrorTime;
-
-    
-    // NO NEED?
-    // private StampedDetectedObjects lastDetectedObjects;
+    private int latestDetectionTime; // latest time of detection of the camera
+    private boolean isFaulty; // is there an error object in the data
+    private int earliestErrorTime;  // time of first error
 
 
     // Constructor
-    public Camera(int id, int frequency, STATUS status, int earliestErrorTime, boolean isFaulty) {
+    public Camera(int id, int frequency, STATUS status, HashMap<Integer, StampedDetectedObjects> detectedObjects, boolean isFaulty, int earliestErrorTime) {
         this.id = id;
         this.frequency = frequency;
-        this.status = STATUS.UP;
-        this.detectedObjects = new HashMap<>();
+        this.status = status;
+        this.detectedObjects = detectedObjects;
         this.latestDetectionTime = computeLatestDetectionTime();
-        this.earliestErrorTime = earliestErrorTime;
         this.isFaulty = isFaulty;
+        this.earliestErrorTime = earliestErrorTime;
     }
 
     private int computeLatestDetectionTime() {
@@ -51,6 +52,36 @@ public class Camera {
         StampedDetectedObjects objects = detectedObjects.get(currentTime);
         if (objects != null) {
             StatisticalFolder.getInstance().incrementNumDetectedObjects(objects.getDetectedObjects().size());
+        }
+    }
+
+    public Message operateTick(int currentTime) {
+        if (currentTime > getLatestDetectionTime() + getFrequency()) {
+            return new TerminatedBroadcast(CameraService.class, getId() + " finished");
+        }
+        else if (currentTime == getEarliestErrorTime() && getIsFaulty()) {
+            return new CrashedBroadcast("camera" + getId(), "camera" + getId() + " crashed");
+        }
+        else if (currentTime < getEarliestErrorTime()) {
+            updateLastDetectedObjects(currentTime);
+            StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
+            if (readyDetectedObjects != null) {
+                return new DetectObjectsEvent(readyDetectedObjects);
+                // Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
+                // if (futureObject != null) {
+                //     // the futureObject.get() is a blocking method - make sure it's okay
+                //     Boolean resolved = futureObject.get();
+                //     if (resolved) {
+                //         System.out.println("The object's coordinations has been successfully processed by a LiDARWorker and the Fusion.");
+                //     }
+                //     else {
+                //         System.out.println("FAILED: The object's coordinations has not been successfully processed by a LiDARWorker and the Fusion.");
+                //     }
+                // }
+                // else {
+                //     System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
+                    }
+            }
         }
     }
 
