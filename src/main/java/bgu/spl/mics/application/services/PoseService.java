@@ -40,8 +40,10 @@ public class PoseService extends MicroService {
                 gpsimu.setStatus(STATUS.DOWN);
                 this.terminate();
             }
-            Pose currentPose = gpsimu.getPoseByTick(currentTime);
-            sendEvent(new PoseEvent(currentPose));
+            else {
+                Pose currentPose = gpsimu.getPoseByTick(currentTime);
+                sendEvent(new PoseEvent(currentPose));
+            }
         });
 
         // NOT SURE

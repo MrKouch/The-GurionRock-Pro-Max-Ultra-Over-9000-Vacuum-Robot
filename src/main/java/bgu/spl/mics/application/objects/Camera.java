@@ -20,18 +20,16 @@ public class Camera {
     private HashMap<Integer, StampedDetectedObjects> detectedObjects; // Time-stamped objects detected by the camera, will be initialized in the main program
     private int latestDetectionTime; // latest time of detection of the camera
     private boolean isFaulty; // is there an error object in the data
-    private int earliestErrorTime;  // time of first error
 
 
     // Constructor
-    public Camera(int id, int frequency, STATUS status, HashMap<Integer, StampedDetectedObjects> detectedObjects, boolean isFaulty, int earliestErrorTime) {
+    public Camera(int id, int frequency, STATUS status, HashMap<Integer, StampedDetectedObjects> detectedObjects, boolean isFaulty) {
         this.id = id;
         this.frequency = frequency;
         this.status = status;
         this.detectedObjects = detectedObjects;
         this.latestDetectionTime = computeLatestDetectionTime();
         this.isFaulty = isFaulty;
-        this.earliestErrorTime = earliestErrorTime;
     }
 
     private int computeLatestDetectionTime() {
@@ -55,35 +53,33 @@ public class Camera {
         }
     }
 
+    public boolean hasErrorNow(int time) {
+        StampedDetectedObjects currentObjects = detectedObjects.get(time);
+        for (DetectedObject detectedObject : currentObjects.getDetectedObjects()) {
+            if (detectedObject.getId() == "ERROR")
+                return true;
+        }
+        return false;
+    }
+
     public Message operateTick(int currentTime) {
         if (currentTime > getLatestDetectionTime() + getFrequency()) {
             return new TerminatedBroadcast(CameraService.class, getId() + " finished");
         }
-        else if (currentTime == getEarliestErrorTime() && getIsFaulty()) {
-            return new CrashedBroadcast("camera" + getId(), "camera" + getId() + " crashed");
-        }
-        else if (currentTime < getEarliestErrorTime()) {
-            updateLastDetectedObjects(currentTime);
-            StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
-            if (readyDetectedObjects != null) {
-                return new DetectObjectsEvent(readyDetectedObjects);
-                // Future<Boolean> futureObject = (Future<Boolean>)sendEvent(new DetectObjectsEvent(readyDetectedObjects));
-                // if (futureObject != null) {
-                //     // the futureObject.get() is a blocking method - make sure it's okay
-                //     Boolean resolved = futureObject.get();
-                //     if (resolved) {
-                //         System.out.println("The object's coordinations has been successfully processed by a LiDARWorker and the Fusion.");
-                //     }
-                //     else {
-                //         System.out.println("FAILED: The object's coordinations has not been successfully processed by a LiDARWorker and the Fusion.");
-                //     }
-                // }
-                // else {
-                //     System.out.println("No Micro-Service has registered to handle DetectObjectsEvent events! The event cannot be processed");
-                    }
+        else {
+            if (hasErrorNow(currentTime))
+                return new CrashedBroadcast("camera" + getId(), "camera" + getId() + " crashed");
+            else {
+                updateLastDetectedObjects(currentTime);
+                StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
+                if (readyDetectedObjects != null) {
+                    return new DetectObjectsEvent(readyDetectedObjects);
+                }
             }
         }
+        return null;
     }
+    
 
     // Getters and Setters
     public int getId() {
@@ -112,10 +108,6 @@ public class Camera {
 
     public int getLatestDetectionTime() {
         return latestDetectionTime;
-    }
-
-    public int getEarliestErrorTime() {
-        return earliestErrorTime;
     }
 
     public boolean getIsFaulty() {

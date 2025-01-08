@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import java.util.LinkedList;
 import java.util.List;
 import bgu.spl.mics.Future;
+import bgu.spl.mics.Message;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
@@ -48,21 +49,20 @@ public class LiDarService extends MicroService {
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             int currentTime = tickBroadcast.getCurrentTime();
-            if (currentTime > liDarWorkerTracker.getLatestDetectionTime() + liDarWorkerTracker.getFrequency()) {
-                sendBroadcast(new TerminatedBroadcast(LiDarService.class, liDarWorkerTracker.getId() + " finished"));
+            Message msg = liDarWorkerTracker.operateTick(currentTime, getName());
+            if (msg instanceof TerminatedBroadcast) {
+                sendBroadcast((TerminatedBroadcast)msg);
                 liDarWorkerTracker.setStatus(STATUS.DOWN);
                 this.terminate();
             }
-            if (currentTime == liDarWorkerTracker.getEarliestErrorTime() && liDarWorkerTracker.getIsFaulty()) {
-                sendBroadcast(new CrashedBroadcast("liDarWorkerTracker" + liDarWorkerTracker.getId(), "liDarWorkerTracker" + liDarWorkerTracker.getId() + " crashed"));
+            else if (msg instanceof CrashedBroadcast) {
+                sendBroadcast((CrashedBroadcast)msg);
                 liDarWorkerTracker.setStatus(STATUS.ERROR);
                 this.terminate();
             }
-            if (currentTime < liDarWorkerTracker.getEarliestErrorTime()) {
-                liDarWorkerTracker.updateStatistics(currentTime);
-                liDarWorkerTracker.detectedToTracked(currentTime);
+            else if (msg instanceof TrackedObjectsEvent) {
                 // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-                sendEvent(new TrackedObjectsEvent(getName(), liDarWorkerTracker.getWaitingObjects()));
+                sendEvent((TrackedObjectsEvent)msg);
                 // Empty the last tracked objects list
                 liDarWorkerTracker.getWaitingObjects().clear();
             }

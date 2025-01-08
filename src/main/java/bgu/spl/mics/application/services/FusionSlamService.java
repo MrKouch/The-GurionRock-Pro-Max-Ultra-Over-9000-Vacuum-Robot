@@ -66,7 +66,9 @@ public class FusionSlamService extends MicroService {
 
         subscribeEvent(PoseEvent.class, poseEvent -> {
             Pose currPose = poseEvent.getCurrentPose();
-            fusionSlam.getposes().add(currPose.getTime(), currPose);
+            // fusionSlam.getposes().add(currPose.getTime(), currPose);
+            fusionSlam.addPose(currPose.getTime(), currPose);
+
             for(TrackedObject object : fusionSlam.getWaitingTrackedObjects()) {
                 fusionSlam.addOrUpdateLandMark(object, currPose);
                 //fusionSlam.addOrUpdateLandMark(object, fusionSlam.getposes().get(object.getTime()));

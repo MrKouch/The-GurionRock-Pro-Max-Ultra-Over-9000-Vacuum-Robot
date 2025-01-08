@@ -45,7 +45,7 @@ public class MessageBusImpl implements MessageBus {
     }
 
     // public getInstance method
-    public static MessageBus getMessageBus() {
+    public static MessageBusImpl getMessageBus() {
         return MessageBusHolder.instance;
     }
 
@@ -148,20 +148,13 @@ public class MessageBusImpl implements MessageBus {
         return queue.take(); // Blocks until a message is available
     }
 
-    // 
+    public ConcurrentHashMap<MicroService, LinkedBlockingDeque<Message>> getRegisteredMS() {
+        return microServicesMessages;
+    }
     
-
-	// WHAT IS THIS?
-    // public static MessageBus removeFromQueue() {
-    //     if(theBus == null) {
-    //         synchronized(MessageBus.class) {
-    //             if(theBus == null)
-    //             theBus = new MessageBusImpl();
-    //         }
-    //     }
-    //     return theBus;
-    // }
-
+    public ConcurrentHashMap<Class<? extends Broadcast>, LinkedBlockingQueue<MicroService>> getBroadcastsSubscribers() {
+        return broadcastsSubscribers;
+    }
 }
 
 

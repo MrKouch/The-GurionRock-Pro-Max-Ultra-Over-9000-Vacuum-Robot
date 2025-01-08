@@ -41,6 +41,15 @@ public class FusionSlam {
         return landmarks;
     }
 
+    public LandMark getLandmark(String id) {
+        for (LandMark landmark : landmarks) {
+            if (landmark.getId() == id) {
+                return landmark;
+            }
+        }
+        return null;
+    }
+
     public void setLandmarks(List<LandMark> landmarks) {
         this.landmarks = landmarks;
     }
@@ -49,8 +58,12 @@ public class FusionSlam {
         return poses;
     }
 
-    public void setposes(List<Pose> poses) {
-        this.poses = poses;
+    public Pose getPose(int time) {
+        return poses.get(time);
+    }
+
+    public void addPose(int time, Pose newPose) {
+        this.poses.add(time, newPose);
     }
 
     public List<TrackedObject> getWaitingTrackedObjects() {

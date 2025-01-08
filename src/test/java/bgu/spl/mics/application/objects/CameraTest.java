@@ -44,13 +44,9 @@ class CameraTest {
         StampedDetectedObjects forthTickData = new StampedDetectedObjects(4,forthObjects);
         objects.put(4, forthTickData);
         
-        camera = new Camera(1,0, STATUS.UP, objects, true, 3);
+        camera = new Camera(1,0, STATUS.UP, objects, true);
     }
 
-    /**@inv TODO
-     * @pre TODO
-     * @post TODO
-     */
     @Test
     void operateTickTest() {
         assertEquals(1, camera.getId());
@@ -65,14 +61,10 @@ class CameraTest {
         assertEquals(2, camera.getLatestDetectionTime());
 
         assertEquals(1, camera.getId());
-        assertEquals(0, camera.getFrequency()););
+        assertEquals(0, camera.getFrequency());
         assertEquals(4, camera.getDetectedObjects().size());
     }
 
-    /**@inv TODO
-     * @pre TODO
-     * @post TODO
-     */
     @Test
     void operateTickErrorTest() {
         assertEquals(1, camera.getId());

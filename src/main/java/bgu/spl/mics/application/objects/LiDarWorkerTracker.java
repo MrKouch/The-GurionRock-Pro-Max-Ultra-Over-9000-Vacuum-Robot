@@ -3,6 +3,12 @@ package bgu.spl.mics.application.objects;
 import java.util.LinkedList;
 import java.util.List;
 
+import bgu.spl.mics.Message;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.messages.TrackedObjectsEvent;
+import bgu.spl.mics.application.services.LiDarService;
+
 /**
  * LiDarWorkerTracker is responsible for managing a LiDAR worker.
  * It processes DetectObjectsEvents and generates TrackedObjectsEvents by using data from the LiDarDataBase.
@@ -17,10 +23,9 @@ public class LiDarWorkerTracker {
     private List<TrackedObject> waitingObjects;
     private int latestDetectionTime;
     private boolean isFaulty;
-    private int earliestErrorTime;
 
     // Constructor
-    public LiDarWorkerTracker(String id, int frequency, List<StampedDetectedObjects> stampedDetectedObjects, boolean isFaulty, int earliestErrorTime) {
+    public LiDarWorkerTracker(String id, int frequency, List<StampedDetectedObjects> stampedDetectedObjects, boolean isFaulty) {
         this.id = id;
         this.frequency = frequency;
         this.status = STATUS.UP;
@@ -28,7 +33,6 @@ public class LiDarWorkerTracker {
         this.waitingObjects = new LinkedList<>();
         this.latestDetectionTime = computeLatestDetectionTime();
         this.isFaulty = isFaulty;
-        this.earliestErrorTime = earliestErrorTime;
     }
 
     private int computeLatestDetectionTime() {
@@ -78,10 +82,6 @@ public class LiDarWorkerTracker {
         return isFaulty;
     }
 
-    public int getEarliestErrorTime() {
-        return earliestErrorTime;
-    }
-
     public void detectedToTracked(int currentTime) {
         for (StampedDetectedObjects objects : stampedDetectedObjects) {
             if(objects.getTime() + frequency <= currentTime) {
@@ -96,6 +96,19 @@ public class LiDarWorkerTracker {
         }
     }
 
+    public boolean hasErrorNow(int time) {
+        for (StampedDetectedObjects objects : stampedDetectedObjects) {
+            if(objects.getTime() == time) {
+                for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
+                    if(trackedObject.getId() == "ERROR") {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public void updateStatistics(int currentTime) {
         int newTracks = 0;
         for (TrackedObject object : LiDarDataBase.getInstance().getTrackedObjects()) {
@@ -104,5 +117,21 @@ public class LiDarWorkerTracker {
             }
         }
         StatisticalFolder.getInstance().incrementNumTrackedObjects(newTracks);
+    }
+
+    public Message operateTick(int currentTime, String senderId) {
+        if (currentTime > getLatestDetectionTime() + getFrequency()) {
+            return new TerminatedBroadcast(LiDarService.class, getId() + " finished");
+        }
+        else {
+            if (hasErrorNow(currentTime))
+                return new CrashedBroadcast("liDarWorkerTracker" + getId(), "liDarWorkerTracker" + getId() + " crashed");
+            else {
+                updateStatistics(currentTime);
+                detectedToTracked(currentTime);
+                // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+                return new TrackedObjectsEvent(senderId, getWaitingObjects());
+            }
+        }
     }
 }
