@@ -25,15 +25,14 @@ public class Camera {
 
 
     // Constructor
-    public Camera(int id, int frequency, STATUS status, HashMap<Integer, StampedDetectedObjects> detectedObjects, boolean isFaulty) {
+    public Camera(int id, int frequency, HashMap<Integer, StampedDetectedObjects> detectedObjects) {
         this.id = id;
         this.frequency = frequency;
-        this.status = status;
+        this.status = STATUS.UP;
         this.detectedObjects = detectedObjects;
         this.lastDetectedObjects = new StampedDetectedObjects(0, null);
         this.prevLastDetectedObjects = new StampedDetectedObjects(0, null);
         this.latestDetectionTime = computeLatestDetectionTime();
-        this.isFaulty = isFaulty;
     }
 
     private int computeLatestDetectionTime() {

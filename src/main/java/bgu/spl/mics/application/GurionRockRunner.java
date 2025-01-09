@@ -1,8 +1,10 @@
 package bgu.spl.mics.application;
 
 import bgu.spl.mics.application.objects.Camera;
+import bgu.spl.mics.application.objects.FusionSlam;
 import bgu.spl.mics.application.objects.Input;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
+import bgu.spl.mics.application.objects.Output;
 import bgu.spl.mics.application.services.CameraService;
 import bgu.spl.mics.application.services.LiDarService;
 import bgu.spl.mics.application.services.TimeService;
@@ -71,14 +73,17 @@ public class GurionRockRunner {
 
             // Output final results (e.g., to a JSON file)
             System.out.println("Simulation completed successfully!");
+            Output output = new Output();
+            FusionSlam fusionSlam = FusionSlam.getInstance();
+            if(fusionSlam.getCrashedSensorId() == "") {
+                fusionSlam.generateOutput(output);
+            }
+            else {
+                // iterate over all the sensors and get the 
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
-
-
-
-
-

@@ -66,17 +66,15 @@ public class Input {
             Type type = new TypeToken<Map<String, List<Map<String, Object>>>>() {}.getType();
             rawCameraData = gson.fromJson(reader, type);
         }
-
+    
         List<Camera> cameras = new LinkedList<>();
         for (Map<String, Object> config : cameraConfigurations) {
             int id = ((Double) config.get("id")).intValue();
             int frequency = ((Double) config.get("frequency")).intValue();
             String cameraKey = (String) config.get("camera_key");
-
+    
             HashMap<Integer, StampedDetectedObjects> detectedObjects = new HashMap<>();
-            boolean isFaulty = false;
-            int earliestErrorTime = Integer.MAX_VALUE;
-
+    
             if (rawCameraData.containsKey(cameraKey)) {
                 for (Map<String, Object> detected : rawCameraData.get(cameraKey)) {
                     int time = ((Double) detected.get("time")).intValue();
@@ -85,18 +83,10 @@ public class Input {
                         new TypeToken<List<DetectedObject>>() {}.getType()
                     );
                     detectedObjects.put(time, new StampedDetectedObjects(time, objects));
-
-                    // Check for error objects
-                    for (DetectedObject object : objects) {
-                        if (object.getId().equals("ERROR")) {
-                            isFaulty = true;
-                            earliestErrorTime = Math.min(earliestErrorTime, time);
-                        }
-                    }
                 }
             }
-
-            cameras.add(new Camera(id, frequency, STATUS.UP, detectedObjects, isFaulty, isFaulty ? earliestErrorTime : -1));
+    
+            cameras.add(new Camera(id, frequency, detectedObjects));
         }
         return cameras;
     }
@@ -108,12 +98,11 @@ public class Input {
             Type type = new TypeToken<List<Map<String, Object>>>() {}.getType();
             rawLidarData = gson.fromJson(reader, type);
         }
-
+    
+        // Store tracked objects in LiDarDataBase
         LiDarDataBase lidarDatabase = LiDarDataBase.getInstance();
         List<TrackedObject> trackedObjects = new LinkedList<>();
-        boolean hasError = false;
-        int earliestErrorTime = Integer.MAX_VALUE;
-
+    
         for (Map<String, Object> tracked : rawLidarData) {
             String id = (String) tracked.get("id");
             int time = ((Double) tracked.get("time")).intValue();
@@ -121,39 +110,32 @@ public class Input {
                 gson.toJson(tracked.get("cloudPoints")),
                 new TypeToken<List<List<Double>>>() {}.getType()
             );
-
+    
             List<CloudPoint> coordinates = new LinkedList<>();
             for (List<Double> point : cloudPoints) {
                 double x = point.get(0);
                 double y = point.get(1);
                 coordinates.add(new CloudPoint(x, y));
             }
-
-            if (id.equals("ERROR")) {
-                hasError = true;
-                earliestErrorTime = Math.min(earliestErrorTime, time);
-            }
-
-            trackedObjects.add(new TrackedObject(id, time, null, coordinates));
+    
+            // Initialize TrackedObject with "default description"
+            trackedObjects.add(new TrackedObject(id, time, "default description", coordinates));
         }
-
+    
         lidarDatabase.setTrackedObjects(trackedObjects);
-
+    
+        // Initialize LiDarWorkerTracker objects
         List<LiDarWorkerTracker> lidarWorkers = new LinkedList<>();
-        Random random = new Random();
-        int faultyWorkerIndex = hasError ? random.nextInt(lidarConfigurations.size()) : -1;
-
-        for (int i = 0; i < lidarConfigurations.size(); i++) {
-            Map<String, Object> config = lidarConfigurations.get(i);
+        for (Map<String, Object> config : lidarConfigurations) {
             String id = String.valueOf(((Double) config.get("id")).intValue());
             int frequency = ((Double) config.get("frequency")).intValue();
-            List<StampedDetectedObjects> stampedDetectedObjects = new LinkedList<>(); // Assuming this is empty initially
-
-            boolean isFaulty = i == faultyWorkerIndex;
-            lidarWorkers.add(new LiDarWorkerTracker(id, frequency, stampedDetectedObjects, isFaulty, hasError ? earliestErrorTime : -1));
+    
+            // LiDarWorkerTrackers start with empty stampedDetectedObjects
+            lidarWorkers.add(new LiDarWorkerTracker(id, frequency, new LinkedList<>()));
         }
         return lidarWorkers;
     }
+    
 
     private GPSIMU parsePoseData(String filePath) throws IOException {
         Gson gson = new Gson();

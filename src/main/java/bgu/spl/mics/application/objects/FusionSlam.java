@@ -123,6 +123,17 @@ public class FusionSlam {
         return -1;
     }
 
+
+    public Output generateOutput(Output output) {
+        // Go the the statistical folder and add the data from there to a json file containing:
+        // numdetectedobjects
+        // numtrackedobjects
+        // numlandmarks
+        // list of the kandmarks with all the data about them in the shape of (example):
+        // "Wall_4":{"id":"Wall_4","description":"Wall","coordinates":[{"x":1.1887387639977982,"y":5.046603301251042},{"x":1.2533775541582042,"y":5.113604111414717}]},
+        return null;
+    }
+
     
     public String getCrashedSensorId() {
         return crashedSensorId;

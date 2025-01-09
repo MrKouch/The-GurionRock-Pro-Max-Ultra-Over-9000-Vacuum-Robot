@@ -27,7 +27,7 @@ public class LiDarWorkerTracker {
     private boolean isFaulty;
 
     // Constructor
-    public LiDarWorkerTracker(String id, int frequency, List<StampedDetectedObjects> stampedDetectedObjects, boolean isFaulty) {
+    public LiDarWorkerTracker(String id, int frequency, List<StampedDetectedObjects> stampedDetectedObjects) {
         this.id = id;
         this.frequency = frequency;
         this.status = STATUS.UP;
@@ -36,7 +36,6 @@ public class LiDarWorkerTracker {
         this.latestDetectionTime = computeLatestDetectionTime();
         this.lastTrackedObjects = new LinkedList<TrackedObject>();
         this.prevLastTrackedObjects = new LinkedList<TrackedObject>();
-        this.isFaulty = isFaulty;
     }
 
     private int computeLatestDetectionTime() {
