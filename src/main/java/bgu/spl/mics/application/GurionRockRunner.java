@@ -54,14 +54,21 @@ public class GurionRockRunner {
             // Create a CountDownLatch with the total number of service threads
             int totalServices = input.getCameras().size() + input.getLidarWorkers().size() + 2;
             latch = new CountDownLatch(totalServices);
+            
+            List<Thread> serviceThreads = new ArrayList<>();
+
+            FusionSlamService fusionSlamService = new FusionSlamService();
+            Thread fusionSlamThread = new Thread(fusionSlamService);
+            fusionSlamThread.start();
+            serviceThreads.add(fusionSlamThread);
 
             // Create and start CameraServices
-            List<Thread> serviceThreads = new ArrayList<>();
             for (Camera camera : input.getCameras()) {
                 CameraService cameraService = new CameraService(camera);
                 Thread cameraThread = new Thread(cameraService);
                 cameraThread.start();
                 serviceThreads.add(cameraThread);
+                FusionSlam.getInstance().incrementActiveSensors();
             }
             
             // Create and start LiDarServices
@@ -70,17 +77,16 @@ public class GurionRockRunner {
                 Thread lidarThread = new Thread(lidarService);
                 lidarThread.start();
                 serviceThreads.add(lidarThread);
+                FusionSlam.getInstance().incrementActiveSensors();
             }
             
             PoseService poseService = new PoseService(input.getGpsimu());
             Thread posesThread = new Thread(poseService);
             posesThread.start();
             serviceThreads.add(posesThread);
+            FusionSlam.getInstance().incrementActiveSensors();
+
             
-            FusionSlamService fusionSlamService = new FusionSlamService();
-            Thread fusionSlamThread = new Thread(fusionSlamService);
-            fusionSlamThread.start();
-            serviceThreads.add(fusionSlamThread);
 
             // Wait for all service threads to complete their initialization
             latch.await();
@@ -93,33 +99,30 @@ public class GurionRockRunner {
             
             // Wait for the simulation to finish
             timeServiceThread.join(); // Wait for TimeService to complete
-            int i = 0;
             for (Thread serviceThread : serviceThreads) {
-                System.out.println("iteration " + i);
-                i++;
                 serviceThread.join(); // Wait for all services to complete
             }
             
             // Output final results (e.g., to a JSON file)
-            System.out.println("Simulation completed successfully!");
-            // Output output = new Output(args[0]);
-            // FusionSlam fusionSlam = FusionSlam.getInstance();
-            // if(fusionSlam.getCrashedSensorId() == "") {
-            //     fusionSlam.generateOutput(output);
-            // }
-            // else {
-            //     HashMap<Camera, StampedDetectedObjects> lastDetectedObjects = new HashMap<>();
-            //     HashMap<LiDarWorkerTracker, List<TrackedObject>> lastTrackedObjects = new HashMap<>();
-            //     // iterate over all the sensors and get the
-            //     for (Camera camera : input.getCameras()) {
-            //         lastDetectedObjects.put(camera, camera.getLastDetectedObjects());
+            System.out.println("Simulation completed successfully! creating output file...");
+            Output output = new Output(args[0]);
+            FusionSlam fusionSlam = FusionSlam.getInstance();
+            if(fusionSlam.getCrashedSensorId().equals("")) {
+                fusionSlam.generateOutput(output);
+            }
+            else {
+                HashMap<Camera, StampedDetectedObjects> lastDetectedObjects = new HashMap<>();
+                HashMap<LiDarWorkerTracker, List<TrackedObject>> lastTrackedObjects = new HashMap<>();
+                // iterate over all the sensors and get the
+                for (Camera camera : input.getCameras()) {
+                    lastDetectedObjects.put(camera, camera.getLastDetectedObjects());
                     
-            //     }
-            //     for (LiDarWorkerTracker workerTracker : input.getLidarWorkers()) {
-            //         lastTrackedObjects.put(workerTracker, workerTracker.getLastTrackedObjects());
-            //     }
-            //     output.generateErrorOutputFile(lastDetectedObjects, lastTrackedObjects, fusionSlam.getCrashedSensorId(), fusionSlam.getErrorDescription()); 
-            // }
+                }
+                for (LiDarWorkerTracker workerTracker : input.getLidarWorkers()) {
+                    lastTrackedObjects.put(workerTracker, workerTracker.getLastTrackedObjects());
+                }
+                output.generateErrorOutputFile(lastDetectedObjects, lastTrackedObjects, fusionSlam.getCrashedSensorId(), fusionSlam.getErrorDescription()); 
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

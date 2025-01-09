@@ -36,9 +36,10 @@ public class FusionSlamService extends MicroService {
     }
 
     private void handleSensorTerminated(String whyTerminated) {
+        this.fusionSlam.oneLessActiveSensor();
         int currActiveSensors = this.fusionSlam.getActiveSensors();
-        this.fusionSlam.setActiveSensors(currActiveSensors - 1);
         if (currActiveSensors == 0) {
+            System.out.println("fusion terminated");
             sendBroadcast(new TerminatedBroadcast(FusionSlamService.class, whyTerminated));
             // download a report
             this.terminate();
@@ -56,15 +57,15 @@ public class FusionSlamService extends MicroService {
             Pose currPose = poseEvent.getCurrentPose();
             // fusionSlam.getposes().add(currPose.getTime(), currPose);
             fusionSlam.addPose(currPose.getTime(), currPose);
-            
             for(TrackedObject object : fusionSlam.getWaitingTrackedObjects()) {
                 fusionSlam.addOrUpdateLandMark(object, currPose);
                 //fusionSlam.addOrUpdateLandMark(object, fusionSlam.getposes().get(object.getTime()));
             }
             fusionSlam.clearWaitingTrackedObjects();
         });
-
+        
         subscribeEvent(TrackedObjectsEvent.class, trackedObjectsEvent -> {
+            System.out.println("in trackedobjectevent callback");
             for(TrackedObject object : trackedObjectsEvent.getTrackedObjects()) {
                 // Pose currentPose = fusionSlam.getposes().get(object.getTime());
                 Pose currentPose = fusionSlam.getPose(object.getTime());

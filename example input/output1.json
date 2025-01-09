@@ -1,0 +1,21 @@
+{
+  "numdetectedobjects": 13,
+  "numlandmarks": 1,
+  "numtrackedobjects": 13,
+  "landmarks": [
+    {
+      "id": "Wall_1",
+      "description": "Wall",
+      "coordinates": [
+        {
+          "x": 0.4908953928360109,
+          "y": 0.12055924334093296
+        },
+        {
+          "x": 0.3978103367934267,
+          "y": 0.12044636487120144
+        }
+      ]
+    }
+  ]
+}

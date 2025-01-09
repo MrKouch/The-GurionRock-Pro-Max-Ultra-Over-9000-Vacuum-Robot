@@ -62,6 +62,7 @@ public class LiDarService extends MicroService {
             }
             else if (msg instanceof TrackedObjectsEvent) {
                 // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+                System.out.println("sending tracke event");
                 sendEvent((TrackedObjectsEvent)msg);
                 // Empty the last tracked objects list
                 liDarWorkerTracker.getWaitingObjects().clear();

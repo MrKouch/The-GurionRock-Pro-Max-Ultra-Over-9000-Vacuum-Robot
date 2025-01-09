@@ -37,7 +37,6 @@ public class TimeService extends MicroService {
             }
             else if (currentTick < duration + 1) {
                 currentTick++;
-                System.out.println("currentTick: " + currentTick);
                 sendBroadcast(new TickBroadcast(currentTick));
             }
             try {
@@ -56,6 +55,5 @@ public class TimeService extends MicroService {
         // Send the first tick to start the simulation
         sendBroadcast(new TickBroadcast(1));
         currentTick++;
-        System.out.println("end init time");
     }
 }

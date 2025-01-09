@@ -102,7 +102,7 @@ public class LiDarWorkerTracker {
             if(objects.getTime() + frequency <= currentTime) {
                 for (DetectedObject detectedObject : objects.getDetectedObjects()) {
                     for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
-                        if(trackedObject.getId() == detectedObject.getId()) {
+                        if(trackedObject.getId().equals(detectedObject.getId())) {
                             trackedObject.setDescription(detectedObject.getDescription());
                             waitingObjects.add(trackedObject);
                         }
@@ -116,7 +116,7 @@ public class LiDarWorkerTracker {
         for (StampedDetectedObjects objects : stampedDetectedObjects) {
             if(objects.getTime() == time) {
                 for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
-                    if(trackedObject.getId() == "ERROR") {
+                    if(trackedObject.getId().equals("ERROR")) {
                         return true;
                     }
                 }
@@ -152,8 +152,9 @@ public class LiDarWorkerTracker {
                 updateStatistics(currentTime);
                 detectedToTracked(currentTime);
                 // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-                if (waitingObjects.size() > 0)
+                if (waitingObjects.size() > 0) {
                     return new TrackedObjectsEvent(senderId, getWaitingObjects());
+                }
             }
         }
         return null;

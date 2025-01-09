@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
+
 /**
  * Manages the fusion of sensor data for simultaneous localization and mapping (SLAM).
  * Combines data from multiple sensors (e.g., LiDAR, camera) to build and update a global map.
@@ -22,7 +24,7 @@ public class FusionSlam {
         this.landmarks = new ArrayList<>();
         this.poses = new ArrayList<>();
         this.waitingTrackedObjects = new LinkedList<>();
-         // todo: initialize activeSensors
+        this.activeSensors = 0;
         this.crashedSensorId = "";
         this.errorDescription = "";
     }
@@ -102,6 +104,7 @@ public class FusionSlam {
         if(landmarkIndex == -1) {
             landmarks.add(new LandMark(tracked.getId(), tracked.getDescription(), newCloudPoints));
             StatisticalFolder.getInstance().incrementNumLandmarks();
+            System.out.println("numLandmarks:" + StatisticalFolder.getInstance().getNumLandmarks());
         }
         // existing landmark
         else {
@@ -155,5 +158,18 @@ public class FusionSlam {
     public void setActiveSensors(int currActiveSensors) {
         this.activeSensors = currActiveSensors;
     }
+
+    public void incrementActiveSensors() {
+        activeSensors++;
+    }
+    public void oneLessActiveSensor() {
+        if(activeSensors > 0)
+            activeSensors--;
+        else {
+            throw new RuntimeErrorException(new Error("cannot decrease active sensors bellow 0!"));
+        }
+    }
+
+    
 
 }

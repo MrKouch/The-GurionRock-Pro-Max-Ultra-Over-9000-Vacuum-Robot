@@ -62,8 +62,9 @@ public class Camera {
         StampedDetectedObjects currentObjects = detectedObjects.get(time);
         if (currentObjects != null) {
             for (DetectedObject detectedObject : currentObjects.getDetectedObjects()) {
-                if (detectedObject.getId() == "ERROR")
+                if (detectedObject.getId().equals("ERROR")) {
                     return true;
+                }
             }
         }
         return false;
