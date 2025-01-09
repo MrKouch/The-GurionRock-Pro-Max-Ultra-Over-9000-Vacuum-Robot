@@ -70,6 +70,8 @@ public class CameraService extends MicroService {
 
         // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            if (camera.getLastDetectedObjects().getTime() == crashedBroadcast.getCrashedTime())
+                camera.setLastDetectedObjectsToPrev();
             sendBroadcast(new TerminatedBroadcast(CameraService.class, "camera - other sensor has been creshed."));
             camera.setStatus(STATUS.DOWN);
             this.terminate();

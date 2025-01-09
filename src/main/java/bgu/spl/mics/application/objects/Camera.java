@@ -18,6 +18,8 @@ public class Camera {
     private int frequency; // Time interval at which the camera sends new events
     private STATUS status; // The status of the camera (Up, Down, Error)
     private HashMap<Integer, StampedDetectedObjects> detectedObjects; // Time-stamped objects detected by the camera, will be initialized in the main program
+    private StampedDetectedObjects lastDetectedObjects;
+    private StampedDetectedObjects prevLastDetectedObjects;
     private int latestDetectionTime; // latest time of detection of the camera
     private boolean isFaulty; // is there an error object in the data
 
@@ -28,6 +30,8 @@ public class Camera {
         this.frequency = frequency;
         this.status = status;
         this.detectedObjects = detectedObjects;
+        this.lastDetectedObjects = new StampedDetectedObjects(0, null);
+        this.prevLastDetectedObjects = new StampedDetectedObjects(0, null);
         this.latestDetectionTime = computeLatestDetectionTime();
         this.isFaulty = isFaulty;
     }
@@ -49,6 +53,8 @@ public class Camera {
     public void updateLastDetectedObjects(int currentTime) {
         StampedDetectedObjects objects = detectedObjects.get(currentTime);
         if (objects != null) {
+            prevLastDetectedObjects = new StampedDetectedObjects(lastDetectedObjects);
+            lastDetectedObjects = objects;
             StatisticalFolder.getInstance().incrementNumDetectedObjects(objects.getDetectedObjects().size());
         }
     }
@@ -68,7 +74,7 @@ public class Camera {
         }
         else {
             if (hasErrorNow(currentTime))
-                return new CrashedBroadcast("camera" + getId(), "camera" + getId() + " crashed");
+                return new CrashedBroadcast("camera" + getId(), "camera" + getId() + " crashed", currentTime);
             else {
                 updateLastDetectedObjects(currentTime);
                 StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
@@ -108,6 +114,14 @@ public class Camera {
 
     public int getLatestDetectionTime() {
         return latestDetectionTime;
+    }
+
+    public StampedDetectedObjects getLastDetectedObjects() {
+        return lastDetectedObjects;
+    }
+
+    public void setLastDetectedObjectsToPrev() {
+        this.lastDetectedObjects = prevLastDetectedObjects;
     }
 
     public boolean getIsFaulty() {

@@ -22,6 +22,8 @@ public class LiDarWorkerTracker {
     private List<StampedDetectedObjects> stampedDetectedObjects;
     private List<TrackedObject> waitingObjects;
     private int latestDetectionTime;
+    private List<TrackedObject> lastTrackedObjects;
+    private List<TrackedObject> prevLastTrackedObjects;
     private boolean isFaulty;
 
     // Constructor
@@ -30,8 +32,10 @@ public class LiDarWorkerTracker {
         this.frequency = frequency;
         this.status = STATUS.UP;
         this.stampedDetectedObjects = stampedDetectedObjects;
-        this.waitingObjects = new LinkedList<>();
+        this.waitingObjects = new LinkedList<TrackedObject>();
         this.latestDetectionTime = computeLatestDetectionTime();
+        this.lastTrackedObjects = new LinkedList<TrackedObject>();
+        this.prevLastTrackedObjects = new LinkedList<TrackedObject>();
         this.isFaulty = isFaulty;
     }
 
@@ -69,6 +73,14 @@ public class LiDarWorkerTracker {
         return waitingObjects;
     }
 
+    public int getLastDetectionTime() {
+        return this.lastTrackedObjects.get(0).getTime();
+    }
+
+    public void setLastTrackedObjectsToPrev() {
+        this.lastTrackedObjects = prevLastTrackedObjects;
+    }
+
     // Setters (only for mutable fields)
     public void setFrequency(int frequency) {
         this.frequency = frequency;
@@ -88,6 +100,7 @@ public class LiDarWorkerTracker {
                 for (DetectedObject detectedObject : objects.getDetectedObjects()) {
                     for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
                         if(trackedObject.getId() == detectedObject.getId()) {
+                            trackedObject.setDescription(detectedObject.getDescription());
                             waitingObjects.add(trackedObject);
                         }
                     }
@@ -111,12 +124,18 @@ public class LiDarWorkerTracker {
 
     public void updateStatistics(int currentTime) {
         int newTracks = 0;
+        List<TrackedObject> latestObjects = new LinkedList<>();
         for (TrackedObject object : LiDarDataBase.getInstance().getTrackedObjects()) {
             if(object.getTime() == currentTime) {
+                latestObjects.add(object);
                 newTracks++;
             }
         }
-        StatisticalFolder.getInstance().incrementNumTrackedObjects(newTracks);
+        if (newTracks > 0) {
+            this.prevLastTrackedObjects = new LinkedList<>(this.lastTrackedObjects);
+            this.lastTrackedObjects = latestObjects;
+            StatisticalFolder.getInstance().incrementNumTrackedObjects(newTracks);
+        }
     }
 
     public Message operateTick(int currentTime, String senderId) {
@@ -125,13 +144,15 @@ public class LiDarWorkerTracker {
         }
         else {
             if (hasErrorNow(currentTime))
-                return new CrashedBroadcast("liDarWorkerTracker" + getId(), "liDarWorkerTracker" + getId() + " crashed");
+                return new CrashedBroadcast("liDarWorkerTracker" + getId(), "liDarWorkerTracker" + getId() + " crashed", currentTime);
             else {
                 updateStatistics(currentTime);
                 detectedToTracked(currentTime);
                 // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-                return new TrackedObjectsEvent(senderId, getWaitingObjects());
+                if (waitingObjects.size() > 0)
+                    return new TrackedObjectsEvent(senderId, getWaitingObjects());
             }
         }
+        return null;
     }
 }

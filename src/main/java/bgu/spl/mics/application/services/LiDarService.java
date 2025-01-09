@@ -83,6 +83,8 @@ public class LiDarService extends MicroService {
 
         // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            if (liDarWorkerTracker.getLastDetectionTime() == crashedBroadcast.getCrashedTime())
+                liDarWorkerTracker.setLastTrackedObjectsToPrev();
             sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - other sensor has been creshed."));
             liDarWorkerTracker.setStatus(STATUS.DOWN);
             this.terminate();

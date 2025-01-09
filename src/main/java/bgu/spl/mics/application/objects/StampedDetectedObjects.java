@@ -14,6 +14,12 @@ public class StampedDetectedObjects {
         this.detectedObjects = detectedObjects;
     }
 
+    // Copy Constructor
+    public StampedDetectedObjects(StampedDetectedObjects stampedDetectedObjects) {
+        this.time = stampedDetectedObjects.getTime();
+        this.detectedObjects = stampedDetectedObjects.getDetectedObjects();
+    }
+
     // Getters and Setters
     public int getTime() {
         return time;
