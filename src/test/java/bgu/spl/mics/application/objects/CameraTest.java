@@ -44,7 +44,7 @@ class CameraTest {
         StampedDetectedObjects forthTickData = new StampedDetectedObjects(4,forthObjects);
         objects.put(4, forthTickData);
         
-        camera = new Camera(1,0, STATUS.UP, objects, true);
+        camera = new Camera(1,0, objects);
     }
 
     @Test

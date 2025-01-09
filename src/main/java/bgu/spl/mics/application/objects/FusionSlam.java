@@ -59,11 +59,14 @@ public class FusionSlam {
     }
 
     public Pose getPose(int time) {
-        return poses.get(time);
+        if (time > 0)
+            return poses.get(time - 1);
+        System.out.println("asked for pose at time 0");
+        return null;
     }
 
     public void addPose(int time, Pose newPose) {
-        this.poses.add(time, newPose);
+        this.poses.add(time - 1, newPose);
     }
 
     public List<TrackedObject> getWaitingTrackedObjects() {
@@ -124,14 +127,8 @@ public class FusionSlam {
     }
 
 
-    public Output generateOutput(Output output) {
-        // Go the the statistical folder and add the data from there to a json file containing:
-        // numdetectedobjects
-        // numtrackedobjects
-        // numlandmarks
-        // list of the kandmarks with all the data about them in the shape of (example):
-        // "Wall_4":{"id":"Wall_4","description":"Wall","coordinates":[{"x":1.1887387639977982,"y":5.046603301251042},{"x":1.2533775541582042,"y":5.113604111414717}]},
-        return null;
+    public void generateOutput(Output output) {
+        output.generateNormalOutputFile();
     }
 
     

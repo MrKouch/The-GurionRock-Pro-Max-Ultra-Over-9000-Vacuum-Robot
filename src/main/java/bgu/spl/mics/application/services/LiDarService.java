@@ -45,7 +45,7 @@ public class LiDarService extends MicroService {
      */
     @Override
     protected void initialize() {
-        System.out.println("LiDAR Service " + getName() + " has srarted");
+        System.out.println("LiDAR Service " + getName() + " has started");
 
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             int currentTime = tickBroadcast.getCurrentTime();

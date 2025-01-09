@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import bgu.spl.mics.application.messages.CrashedBroadcast;
+import bgu.spl.mics.application.messages.PoseEvent;
 
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -33,6 +34,8 @@ public class MessageBusImpl implements MessageBus {
     private MessageBusImpl() {
         eventsSubscribers = new ConcurrentHashMap<>();
         broadcastsSubscribers = new ConcurrentHashMap<>();
+        microServicesMessages = new ConcurrentHashMap<>();
+        eventsFutures = new ConcurrentHashMap<>();
         // microServicesReadWriteLock = new ReentrantReadWriteLock();
         // eventsReadWriteLock = new ReentrantReadWriteLock();
         // broadcastsReadWriteLock = new ReentrantReadWriteLock();
@@ -51,22 +54,22 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        // eventsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
-        // eventsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
+        eventsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
+        eventsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
 		
 		// Its better to use computeIfAbsent
 		// IMPROVEMENT SUGGESTION
-		eventsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
+
+		// eventsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
     }
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        // broadcastsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
-        // broadcastsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
-
+        broadcastsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
+        broadcastsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
 		// Its better to use computeIfAbsent
 		// IMPROVEMENT SUGGESTION
-		broadcastsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
+		// broadcastsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
     }
 
     @Override
@@ -80,18 +83,23 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        locker.readLock().lock();
+        locker.writeLock().lock();
         try {
             Iterator<MicroService> bSubscribers = broadcastsSubscribers.get(b.getClass()).iterator();
             while (bSubscribers.hasNext()) {
                 MicroService m = bSubscribers.next();
                 if (b instanceof CrashedBroadcast)
                     microServicesMessages.get(m).addFirst(b);
-                else
+                else {
+                    if (microServicesMessages.get(m) == null) {
+                        System.out.println("m: " + m);
+                        System.out.println("microServicesMessages.get(m) null");
+                    }
                     microServicesMessages.get(m).addLast(b);
+                }
             }  
         } finally {
-            locker.readLock().unlock();
+            locker.writeLock().unlock();
         }
         
     }
@@ -99,7 +107,7 @@ public class MessageBusImpl implements MessageBus {
     
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        locker.readLock().lock();
+        locker.writeLock().lock();
         try {
             MicroService m = eventsSubscribers.get(e.getClass()).remove();
             microServicesMessages.get(m).addLast(e);
@@ -109,13 +117,14 @@ public class MessageBusImpl implements MessageBus {
             eventsFutures.put(e, future);
             return future; // MAKE SURE
         } finally {
-            locker.readLock().unlock();
+            locker.writeLock().unlock();
         }
     }
 
     @Override
     public void register(MicroService m) {
-        microServicesMessages.put(m, new LinkedBlockingDeque<Message>());
+        LinkedBlockingDeque<Message> mailBox = new LinkedBlockingDeque<Message>();
+        microServicesMessages.put(m, mailBox);
     }
 
     @Override

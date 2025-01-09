@@ -29,19 +29,19 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        sendBroadcast(new TickBroadcast(0));
-        currentTick++;
         subscribeBroadcast(TickBroadcast.class, (tickBroadcast) -> {
             if (currentTick == duration + 1) {
+                System.out.println("end");
                 sendBroadcast(new TerminatedBroadcast(TimeService.class, "The time has reached the Duration limit."));
                 this.terminate();
             }
             else if (currentTick < duration + 1) {
+                currentTick++;
+                System.out.println("currentTick: " + currentTick);
                 sendBroadcast(new TickBroadcast(currentTick));
             }
-            currentTick++;
             try {
-                Thread.sleep(interval);
+                Thread.sleep(interval*500);
             } catch (InterruptedException e) {
                 //
             }
@@ -52,5 +52,10 @@ public class TimeService extends MicroService {
                 this.terminate();
             }
         });
+        
+        // Send the first tick to start the simulation
+        sendBroadcast(new TickBroadcast(1));
+        currentTick++;
+        System.out.println("end init time");
     }
 }

@@ -14,9 +14,9 @@ public class GPSIMU {
     private int latestDetectionTime;
 
     // Constructor
-    public GPSIMU(int currentTick, STATUS status, List<Pose> poseList) {
+    public GPSIMU(int currentTick, List<Pose> poseList) {
         this.currentTick = currentTick;
-        this.status = status;
+        this.status = STATUS.UP;
         this.poseList = poseList;
         this.latestDetectionTime = computeLatestDetectionTime();
     }
@@ -63,7 +63,7 @@ public class GPSIMU {
     }
 
     public Pose getPoseByTick(int tick) {
-        return getPoseList().get(tick);
+        return getPoseList().get(tick - 1);
     }
 
     public int getLatestDetectionTime() {

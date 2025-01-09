@@ -30,7 +30,7 @@ public class FusionSlamService extends MicroService {
      * @param fusionSlam The FusionSLAM object responsible for managing the global map.
      */
     
-    public FusionSlamService(FusionSlam fusionSlam) {
+    public FusionSlamService() {
         super("FusionSlamService");
         this.fusionSlam = FusionSlam.getInstance();
     }
@@ -52,9 +52,22 @@ public class FusionSlamService extends MicroService {
      */
     @Override
     protected void initialize() {
+        subscribeEvent(PoseEvent.class, poseEvent -> {
+            Pose currPose = poseEvent.getCurrentPose();
+            // fusionSlam.getposes().add(currPose.getTime(), currPose);
+            fusionSlam.addPose(currPose.getTime(), currPose);
+            
+            for(TrackedObject object : fusionSlam.getWaitingTrackedObjects()) {
+                fusionSlam.addOrUpdateLandMark(object, currPose);
+                //fusionSlam.addOrUpdateLandMark(object, fusionSlam.getposes().get(object.getTime()));
+            }
+            fusionSlam.clearWaitingTrackedObjects();
+        });
+
         subscribeEvent(TrackedObjectsEvent.class, trackedObjectsEvent -> {
             for(TrackedObject object : trackedObjectsEvent.getTrackedObjects()) {
-                Pose currentPose = fusionSlam.getposes().get(object.getTime());
+                // Pose currentPose = fusionSlam.getposes().get(object.getTime());
+                Pose currentPose = fusionSlam.getPose(object.getTime());
                 if(currentPose == null) {
                     fusionSlam.getWaitingTrackedObjects().add(object.getTime(), object);
                 }
@@ -62,18 +75,6 @@ public class FusionSlamService extends MicroService {
                     fusionSlam.addOrUpdateLandMark(object, currentPose);
                 }
             }
-        });
-
-        subscribeEvent(PoseEvent.class, poseEvent -> {
-            Pose currPose = poseEvent.getCurrentPose();
-            // fusionSlam.getposes().add(currPose.getTime(), currPose);
-            fusionSlam.addPose(currPose.getTime(), currPose);
-
-            for(TrackedObject object : fusionSlam.getWaitingTrackedObjects()) {
-                fusionSlam.addOrUpdateLandMark(object, currPose);
-                //fusionSlam.addOrUpdateLandMark(object, fusionSlam.getposes().get(object.getTime()));
-            }
-            fusionSlam.clearWaitingTrackedObjects();
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {

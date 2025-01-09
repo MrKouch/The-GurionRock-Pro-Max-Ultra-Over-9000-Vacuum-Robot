@@ -1,6 +1,8 @@
 package bgu.spl.mics;
 
-import java.util.concurrent.ConcurrentHashMap; 
+import java.util.concurrent.ConcurrentHashMap;
+
+import bgu.spl.mics.application.GurionRockRunner; 
 
 
 /**
@@ -164,8 +166,9 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public final void run() {
-        initialize();
         theBus.register(this);
+        initialize();
+        GurionRockRunner.latch.countDown();
         while (!terminated) {
             try {
                 Message msg = theBus.awaitMessage(this);

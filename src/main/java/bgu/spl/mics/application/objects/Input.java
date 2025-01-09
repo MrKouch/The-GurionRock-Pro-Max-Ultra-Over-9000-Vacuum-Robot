@@ -153,7 +153,7 @@ public class Input {
             int time = ((Double) poseMap.get("time")).intValue();
             poses.add(new Pose(x, y, yaw, time));
         }
-        return new GPSIMU(0, STATUS.UP, poses);
+        return new GPSIMU(0, poses);
     }
 
     public List<Camera> getCameras() {
@@ -174,5 +174,26 @@ public class Input {
     
     public int getDuration() {
         return duration;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Configuration Details:\n");
+    
+        sb.append("Cameras:\n");
+        for (Camera camera : getCameras()) {
+            sb.append(camera.toString()).append("\n");
+        }
+    
+        sb.append("LiDar Workers:\n");
+        for (LiDarWorkerTracker lidarWorker : getLidarWorkers()) {
+            sb.append(lidarWorker.toString()).append("\n");
+        }
+    
+        sb.append("Tick Time: ").append(getTickTime()).append("\n");
+        sb.append("Duration: ").append(getDuration()).append("\n");
+    
+        return sb.toString();
     }
 }

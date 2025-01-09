@@ -21,7 +21,7 @@ class MessageBusImplTest {
     void setup(){
         theBus = MessageBusImpl.getMessageBus();
         HashMap<Integer, StampedDetectedObjects> objects = new HashMap<>();
-        ms1 = new CameraService(new Camera(1, 1, STATUS.UP, objects, false));
+        ms1 = new CameraService(new Camera(1, 1, objects));
         theBus.register(ms1);
     }
 
@@ -31,7 +31,7 @@ class MessageBusImplTest {
      */
     @Test
     void registerTest() {
-        CameraService ms2 = new CameraService(new Camera(2, 2, STATUS.UP, null, false)); // Example MicroServices
+        CameraService ms2 = new CameraService(new Camera(2, 2, null)); // Example MicroServices
         assertFalse(theBus.getRegisteredMS().containsKey(ms2));
         theBus.register(ms2);
         assertTrue(theBus.getRegisteredMS().containsKey(ms2));
@@ -55,7 +55,7 @@ class MessageBusImplTest {
     @Test
     void subscribeBroadcastTest() {
         assertTrue(theBus.getBroadcastsSubscribers().isEmpty());
-        MicroService camService = new CameraService(new Camera(1, 5, STATUS.UP, new HashMap<>(), false));
+        MicroService camService = new CameraService(new Camera(1, 5, new HashMap<>()));
         theBus.subscribeBroadcast(CrashedBroadcast.class, camService);
         LinkedBlockingQueue<MicroService> subscribers = theBus.getBroadcastsSubscribers().get(CrashedBroadcast.class);
         assertTrue(subscribers.contains(camService));

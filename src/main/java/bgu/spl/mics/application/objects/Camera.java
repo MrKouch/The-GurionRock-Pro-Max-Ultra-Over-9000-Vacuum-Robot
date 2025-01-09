@@ -60,9 +60,11 @@ public class Camera {
 
     public boolean hasErrorNow(int time) {
         StampedDetectedObjects currentObjects = detectedObjects.get(time);
-        for (DetectedObject detectedObject : currentObjects.getDetectedObjects()) {
-            if (detectedObject.getId() == "ERROR")
-                return true;
+        if (currentObjects != null) {
+            for (DetectedObject detectedObject : currentObjects.getDetectedObjects()) {
+                if (detectedObject.getId() == "ERROR")
+                    return true;
+            }
         }
         return false;
     }

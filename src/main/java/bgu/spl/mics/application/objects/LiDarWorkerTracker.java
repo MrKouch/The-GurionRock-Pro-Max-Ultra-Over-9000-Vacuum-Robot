@@ -76,6 +76,10 @@ public class LiDarWorkerTracker {
         return this.lastTrackedObjects.get(0).getTime();
     }
 
+    public List<TrackedObject> getLastTrackedObjects() {
+        return lastTrackedObjects;
+    }
+
     public void setLastTrackedObjectsToPrev() {
         this.lastTrackedObjects = prevLastTrackedObjects;
     }

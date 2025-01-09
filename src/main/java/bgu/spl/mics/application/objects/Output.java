@@ -2,59 +2,77 @@ package bgu.spl.mics.application.objects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class Output {
-    private boolean error; // Flag indicating if there was an error
-    private String errorMessage; // Optional error message (if error is true)
-    private Map<String, Object> data; // Data to include in the output file
 
-    public Output() {
-        this.error = false;
-        this.data = new HashMap<>();
+    private String outputFilePath;
+
+    public Output(String inputFilePath) {
+        // Set the output file path to the same directory as the input configuration file
+        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("output.json").toString();
     }
 
-    public void setError(String errorMessage) {
-        this.error = true;
-        this.errorMessage = errorMessage;
-    }
-
-    public boolean hasError() {
-        return error;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void addData(String key, Object value) {
-        this.data.put(key, value);
-    }
-
-    public Map<String, Object> getData() {
-        return data;
-    }
-
-    public void writeToFile(String filePath) {
+    public void generateNormalOutputFile() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try (FileWriter writer = new FileWriter(filePath)) {
-            if (error) {
-                Map<String, Object> errorOutput = new HashMap<>();
-                errorOutput.put("error", true);
-                errorOutput.put("errorMessage", errorMessage);
-                gson.toJson(errorOutput, writer);
-            } else {
-                Map<String, Object> successOutput = new HashMap<>(data);
-                successOutput.put("error", false);
-                gson.toJson(successOutput, writer);
-            }
-            System.out.println("Output written to: " + filePath);
+        HashMap<String, Object> outputData = new HashMap<>();
+
+        // Fetch statistical data
+        StatisticalFolder statistics = StatisticalFolder.getInstance();
+        outputData.put("numdetectedobjects", statistics.getNumDetectedObjects());
+        outputData.put("numtrackedobjects", statistics.getNumTrackedObjects());
+        outputData.put("numlandmarks", statistics.getNumLandmarks());
+        outputData.put("landmarks", FusionSlam.getInstance().getLandmarks());
+
+        // Write data to JSON file
+        writeToFile(gson.toJson(outputData));
+    }
+
+    public void generateErrorOutputFile(HashMap<Camera, StampedDetectedObjects> lastDetectedObjects,
+                                        HashMap<LiDarWorkerTracker, List<TrackedObject>> lastTrackedObjects,
+                                        String faultySensor, String errorDescription) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        HashMap<String, Object> outputData = new HashMap<>();
+
+        // Add error-specific details
+        outputData.put("faultySensor", faultySensor);
+        outputData.put("errorDescription", errorDescription);
+
+        // Add last detected objects for each camera
+        HashMap<String, Object> cameraData = new HashMap<>();
+        for (Camera camera : lastDetectedObjects.keySet()) {
+            cameraData.put("Camera_" + camera.getId(), lastDetectedObjects.get(camera));
+        }
+        outputData.put("lastDetectedObjects", cameraData);
+
+        // Add last tracked objects for each LiDAR worker
+        HashMap<String, Object> lidarData = new HashMap<>();
+        for (LiDarWorkerTracker workerTracker : lastTrackedObjects.keySet()) {
+            lidarData.put("LiDarWorker_" + workerTracker.getId(), lastTrackedObjects.get(workerTracker));
+        }
+        outputData.put("lastTrackedObjects", lidarData);
+
+        // Fetch statistical data
+        StatisticalFolder statistics = StatisticalFolder.getInstance();
+        outputData.put("numdetectedobjects", statistics.getNumDetectedObjects());
+        outputData.put("numtrackedobjects", statistics.getNumTrackedObjects());
+        outputData.put("numlandmarks", statistics.getNumLandmarks());
+        outputData.put("landmarks", FusionSlam.getInstance().getLandmarks());
+
+        // Write data to JSON file
+        writeToFile(gson.toJson(outputData));
+    }
+
+    private void writeToFile(String jsonData) {
+        try (FileWriter writer = new FileWriter(outputFilePath)) {
+            writer.write(jsonData);
+            System.out.println("Output written to: " + outputFilePath);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error writing output file: " + e.getMessage());
         }
     }
 }
