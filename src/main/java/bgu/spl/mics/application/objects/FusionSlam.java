@@ -45,7 +45,7 @@ public class FusionSlam {
 
     public LandMark getLandmark(String id) {
         for (LandMark landmark : landmarks) {
-            if (landmark.getId() == id) {
+            if (landmark.getId().equals(id)) {
                 return landmark;
             }
         }
@@ -61,9 +61,13 @@ public class FusionSlam {
     }
 
     public Pose getPose(int time) {
-        if (time > 0)
-            return poses.get(time - 1);
-        System.out.println("asked for pose at time 0");
+        if (time > 0) {
+            // System.out.println("poses.size(): " + poses.size());
+            // System.out.println("time - 1: " + (time - 1));
+            if (poses.size() > time - 1)
+                return poses.get(time - 1);
+        }
+        System.out.println("asked for pose at time 0, or pose that hasn't been created yet");
         return null;
     }
 
@@ -109,7 +113,8 @@ public class FusionSlam {
         // existing landmark
         else {
             List<CloudPoint> landmarkCoordinates = landmarks.get(landmarkIndex).getCoordinates();
-            for (int i = 0; i < landmarkCoordinates.size(); i++) {
+            int minSize = Math.min(landmarkCoordinates.size(), newCloudPoints.size());
+            for (int i = 0; i < minSize; i++) {
                 landmarkCoordinates.get(i).setX((newCloudPoints.get(i).getX() + landmarkCoordinates.get(i).getX())/2);
                 landmarkCoordinates.get(i).setY((newCloudPoints.get(i).getY() + landmarkCoordinates.get(i).getY())/2);
             }
@@ -122,7 +127,7 @@ public class FusionSlam {
 
     private int landmarkIndex(TrackedObject object) {
         for (int i = 0; i < landmarks.size(); i++) {
-            if(object.getId() == landmarks.get(i).getId()) {
+            if(object.getId().equals(landmarks.get(i).getId())) {
                 return i;
             }
         }

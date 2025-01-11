@@ -7,6 +7,7 @@ import bgu.spl.mics.Message;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.FrequencyBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
@@ -64,10 +65,18 @@ public class LiDarService extends MicroService {
                 // Transfer the latest tracked objects data to the fusionSLAM using the message bus
                 System.out.println("sending tracke event");
                 sendEvent((TrackedObjectsEvent)msg);
+                StatisticalFolder.getInstance().incrementNumTrackedObjects(liDarWorkerTracker.getTrackedAdds());
                 // Empty the last tracked objects list
                 liDarWorkerTracker.getWaitingObjects().clear();
+                liDarWorkerTracker.resetTrackedAdds();
             }
         });
+
+        subscribeBroadcast(FrequencyBroadcast.class, frequencyBroadcast -> {
+            if (frequencyBroadcast.getFrequency() > liDarWorkerTracker.getMaxCameraFreq())
+                liDarWorkerTracker.setMaxCameraFreq(frequencyBroadcast.getFrequency());
+        });
+
 
         subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
             liDarWorkerTracker.getStampedDetectedObjects().add((detectObjectsEvent).getStampedDetectedObjects());

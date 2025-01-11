@@ -125,6 +125,7 @@ public class GurionRockRunner {
             }
 
         } catch (Exception e) {
+            System.out.println("Exception e - Gurion");
             e.printStackTrace();
         }
     }

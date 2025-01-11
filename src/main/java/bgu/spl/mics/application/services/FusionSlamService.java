@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.services;
 
+import java.util.Iterator;
+
 import javax.sound.midi.Track;
 
 import bgu.spl.mics.MicroService;
@@ -65,12 +67,15 @@ public class FusionSlamService extends MicroService {
         });
         
         subscribeEvent(TrackedObjectsEvent.class, trackedObjectsEvent -> {
-            System.out.println("in trackedobjectevent callback");
+            // Iterator<TrackedObject> trackedIter = trackedObjectsEvent.getTrackedObjects().iterator();
+            // while(trackedIter.hasNext()) {
+            //     TrackedObject nextTrackedObject = trackedIter.next();
+            // }
             for(TrackedObject object : trackedObjectsEvent.getTrackedObjects()) {
                 // Pose currentPose = fusionSlam.getposes().get(object.getTime());
                 Pose currentPose = fusionSlam.getPose(object.getTime());
                 if(currentPose == null) {
-                    fusionSlam.getWaitingTrackedObjects().add(object.getTime(), object);
+                    fusionSlam.getWaitingTrackedObjects().add(object);
                 }
                 else {
                     fusionSlam.addOrUpdateLandMark(object, currentPose);

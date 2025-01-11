@@ -1,4 +1,5 @@
 package bgu.spl.mics.application.objects;
+import java.util.LinkedList;
 import java.util.List;
 /**
  * Represents objects detected by the camera at a specific timestamp.
@@ -17,7 +18,7 @@ public class StampedDetectedObjects {
     // Copy Constructor
     public StampedDetectedObjects(StampedDetectedObjects stampedDetectedObjects) {
         this.time = stampedDetectedObjects.getTime();
-        this.detectedObjects = stampedDetectedObjects.getDetectedObjects();
+        this.detectedObjects = new LinkedList<DetectedObject>(stampedDetectedObjects.getDetectedObjects());
     }
 
     // Getters and Setters

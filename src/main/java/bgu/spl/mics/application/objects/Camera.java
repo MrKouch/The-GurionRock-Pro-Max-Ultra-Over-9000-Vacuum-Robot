@@ -5,6 +5,7 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.Message;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.FrequencyBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.services.CameraService;
 /**
@@ -45,38 +46,47 @@ public class Camera {
     }
 
     public StampedDetectedObjects getReadyDetectedObjects(int currentTime) {
-        return currentTime >= frequency ? detectedObjects.get(currentTime - frequency) : null;
+        if (currentTime >= frequency) {
+            if (detectedObjects.get(currentTime - frequency) != null && !detectedObjects.get(currentTime - frequency).getDetectedObjects().isEmpty())
+                return new StampedDetectedObjects(detectedObjects.get(currentTime - frequency));
+        }
+        return null;
     }
 
     // Updates the last detected objects and sends the data to the statistical folder
     public void updateLastDetectedObjects(int currentTime) {
         StampedDetectedObjects objects = detectedObjects.get(currentTime);
         if (objects != null) {
-            prevLastDetectedObjects = new StampedDetectedObjects(lastDetectedObjects);
+            if (lastDetectedObjects.getDetectedObjects() != null) {
+                prevLastDetectedObjects = new StampedDetectedObjects(lastDetectedObjects);
+            }
             lastDetectedObjects = objects;
             StatisticalFolder.getInstance().incrementNumDetectedObjects(objects.getDetectedObjects().size());
         }
     }
-
-    public boolean hasErrorNow(int time) {
+    
+    public String hasErrorNow(int time) {
         StampedDetectedObjects currentObjects = detectedObjects.get(time);
         if (currentObjects != null) {
             for (DetectedObject detectedObject : currentObjects.getDetectedObjects()) {
                 if (detectedObject.getId().equals("ERROR")) {
-                    return true;
+                    return detectedObject.getDescription();
                 }
             }
         }
-        return false;
+        return "NO ERROR";
     }
-
+    
     public Message operateTick(int currentTime) {
+        if (currentTime == 1)
+            return new FrequencyBroadcast(frequency);
         if (currentTime > getLatestDetectionTime() + getFrequency()) {
             return new TerminatedBroadcast(CameraService.class, getId() + " finished");
         }
         else {
-            if (hasErrorNow(currentTime))
-                return new CrashedBroadcast("camera" + getId(), "camera" + getId() + " crashed", currentTime);
+            String errorDescription = hasErrorNow(currentTime);
+            if (!errorDescription.equals("NO ERROR"))
+                return new CrashedBroadcast("Camera " + getId(), errorDescription, currentTime);
             else {
                 updateLastDetectedObjects(currentTime);
                 StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);
@@ -129,11 +139,4 @@ public class Camera {
     public boolean getIsFaulty() {
         return isFaulty;
     }
-    
-
-    // NO NEED?
-    // public StampedDetectedObjects getLastDetectedObjects() {
-    //     return lastDetectedObjects;
-    // }
-
 }

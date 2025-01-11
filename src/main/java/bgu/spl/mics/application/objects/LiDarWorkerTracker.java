@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +26,8 @@ public class LiDarWorkerTracker {
     private List<TrackedObject> lastTrackedObjects;
     private List<TrackedObject> prevLastTrackedObjects;
     private boolean isFaulty;
+    private int trackedAdds;
+    private int maxCameraFreq;
 
     // Constructor
     public LiDarWorkerTracker(String id, int frequency, List<StampedDetectedObjects> stampedDetectedObjects) {
@@ -36,6 +39,8 @@ public class LiDarWorkerTracker {
         this.latestDetectionTime = computeLatestDetectionTime();
         this.lastTrackedObjects = new LinkedList<TrackedObject>();
         this.prevLastTrackedObjects = new LinkedList<TrackedObject>();
+        this.trackedAdds = 0;
+        this.maxCameraFreq = 0;
     }
 
     private int computeLatestDetectionTime() {
@@ -98,31 +103,68 @@ public class LiDarWorkerTracker {
     }
 
     public void detectedToTracked(int currentTime) {
-        for (StampedDetectedObjects objects : stampedDetectedObjects) {
-            if(objects.getTime() + frequency <= currentTime) {
-                for (DetectedObject detectedObject : objects.getDetectedObjects()) {
+        Iterator<StampedDetectedObjects> stampediter = stampedDetectedObjects.iterator();
+        while(stampediter.hasNext()) {
+            StampedDetectedObjects stamped = stampediter.next();
+            if(stamped.getTime() + frequency <= currentTime) { 
+                Iterator<DetectedObject> detectedIter = stamped.getDetectedObjects().iterator();
+                while(detectedIter.hasNext()) {
+                    DetectedObject detectedObject = detectedIter.next();
                     for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
-                        if(trackedObject.getId().equals(detectedObject.getId())) {
+                        if(trackedObject.getId().equals(detectedObject.getId()) && trackedObject.getTime() == stamped.getTime()) {
                             trackedObject.setDescription(detectedObject.getDescription());
                             waitingObjects.add(trackedObject);
+                            this.trackedAdds++;
+                            detectedIter.remove();
+                            // stamped.getDetectedObjects().remove(detectedObject);
                         }
                     }
                 }
             }
         }
+        
+        // for (StampedDetectedObjects objects : stampedDetectedObjects) {
+        //     if(objects.getTime() + frequency <= currentTime) {
+        //         for (DetectedObject detectedObject : objects.getDetectedObjects()) {
+        //             for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
+        //                 if(trackedObject.getId().equals(detectedObject.getId())) {
+        //                     trackedObject.setDescription(detectedObject.getDescription());
+        //                     waitingObjects.add(trackedObject);
+        //                     this.trackedAdds++;
+        //                     objects.getDetectedObjects().remove(detectedObject);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
 
-    public boolean hasErrorNow(int time) {
+    public int getTrackedAdds() {
+        return trackedAdds;
+    }
+    public void resetTrackedAdds() {
+        this.trackedAdds = 0;
+    }
+
+    public int getMaxCameraFreq() {
+        return maxCameraFreq;
+    }
+
+    public void setMaxCameraFreq(int maxCameraFreq) {
+        this.maxCameraFreq = maxCameraFreq;
+    }
+    
+    public String hasErrorNow(int time) {
         for (StampedDetectedObjects objects : stampedDetectedObjects) {
             if(objects.getTime() == time) {
                 for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
                     if(trackedObject.getId().equals("ERROR")) {
-                        return true;
+                        return trackedObject.getDescription();
                     }
                 }
             }
         }
-        return false;
+        return "NO ERROR";
     }
 
     public void updateStatistics(int currentTime) {
@@ -137,25 +179,50 @@ public class LiDarWorkerTracker {
         if (newTracks > 0) {
             this.prevLastTrackedObjects = new LinkedList<>(this.lastTrackedObjects);
             this.lastTrackedObjects = latestObjects;
-            StatisticalFolder.getInstance().incrementNumTrackedObjects(newTracks);
+            // StatisticalFolder.getInstance().incrementNumTrackedObjects(newTracks);
         }
     }
 
     public Message operateTick(int currentTime, String senderId) {
-        if (currentTime > getLatestDetectionTime() + getFrequency()) {
+        if (currentTime == getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1 && !getStampedDetectedObjects().isEmpty()) {
+            System.out.println("happened");
+            return handleTrackedSending(currentTime, senderId);
+            // updateStatistics(currentTime);
+            // detectedToTracked(currentTime);
+            // // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+            // if (waitingObjects.size() > 0) {
+            //     List<TrackedObject> waitingObjectsCopy = new LinkedList<>(getWaitingObjects());
+            //     return new TrackedObjectsEvent(senderId, waitingObjectsCopy);
+            // }
+        }
+        // if (currentTime > getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1)
+        else if (currentTime > getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1) {
             return new TerminatedBroadcast(LiDarService.class, getId() + " finished");
         }
         else {
-            if (hasErrorNow(currentTime))
-                return new CrashedBroadcast("liDarWorkerTracker" + getId(), "liDarWorkerTracker" + getId() + " crashed", currentTime);
+            String errorDescription = hasErrorNow(currentTime);
+            if (!errorDescription.equals("NO ERROR"))
+                return new CrashedBroadcast("liDarWorkerTracker " + getId(), errorDescription, currentTime);
             else {
-                updateStatistics(currentTime);
-                detectedToTracked(currentTime);
-                // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-                if (waitingObjects.size() > 0) {
-                    return new TrackedObjectsEvent(senderId, getWaitingObjects());
-                }
+                return handleTrackedSending(currentTime, senderId);
+                // updateStatistics(currentTime);
+                // detectedToTracked(currentTime);
+                // // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+                // if (waitingObjects.size() > 0) {
+                //     List<TrackedObject> waitingObjectsCopy = new LinkedList<>(getWaitingObjects());
+                //     return new TrackedObjectsEvent(senderId, waitingObjectsCopy);
+                // }
             }
+        }
+    }
+    
+    public Message handleTrackedSending(int currentTime, String senderId) {
+        updateStatistics(currentTime);
+        detectedToTracked(currentTime);
+        // Transfer the latest tracked objects data to the fusionSLAM using the message bus
+        if (waitingObjects.size() > 0) {
+            List<TrackedObject> waitingObjectsCopy = new LinkedList<>(getWaitingObjects());
+            return new TrackedObjectsEvent(senderId, waitingObjectsCopy);
         }
         return null;
     }

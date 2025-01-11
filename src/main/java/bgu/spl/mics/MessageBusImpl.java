@@ -7,6 +7,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.PoseEvent;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+import bgu.spl.mics.application.services.FusionSlamService;
 
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -88,7 +90,7 @@ public class MessageBusImpl implements MessageBus {
             Iterator<MicroService> bSubscribers = broadcastsSubscribers.get(b.getClass()).iterator();
             while (bSubscribers.hasNext()) {
                 MicroService m = bSubscribers.next();
-                if (b instanceof CrashedBroadcast)
+                if (b instanceof CrashedBroadcast || (b instanceof TerminatedBroadcast && ((TerminatedBroadcast)b).getServiceWhoTerminated() == FusionSlamService.class))
                     microServicesMessages.get(m).addFirst(b);
                 else {
                     if (microServicesMessages.get(m) == null) {

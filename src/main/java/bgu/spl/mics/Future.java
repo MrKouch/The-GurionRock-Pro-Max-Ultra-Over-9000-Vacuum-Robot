@@ -40,6 +40,7 @@ public class Future<T> {
 					try {
 						wait();
 					} catch(InterruptedException e) {
+						System.out.println("InterruptedException e - Future");
 						Thread.currentThread().interrupt(); // Not sure
 					}	
 				}
@@ -88,6 +89,7 @@ public class Future<T> {
 				try {
 					wait(timeOutMillis);
 				} catch (InterruptedException e) {
+					System.out.println("InterruptedException e - Future");
 					Thread.currentThread().interrupt();
 					return null;
 				}

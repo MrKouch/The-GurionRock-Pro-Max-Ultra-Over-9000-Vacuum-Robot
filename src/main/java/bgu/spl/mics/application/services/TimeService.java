@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.StatisticalFolder;
 
 /**
  * TimeService acts as the global timer for the system, broadcasting TickBroadcast messages
@@ -38,11 +39,13 @@ public class TimeService extends MicroService {
             else if (currentTick < duration + 1) {
                 currentTick++;
                 sendBroadcast(new TickBroadcast(currentTick));
+                StatisticalFolder.getInstance().incrementSystemRuntime();
             }
             try {
                 Thread.sleep(interval*500);
             } catch (InterruptedException e) {
-                //
+                System.out.println("catch InterruptedException e");
+                System.out.println("Time service was interuped while sleeping");
             }
             
         });
@@ -54,6 +57,7 @@ public class TimeService extends MicroService {
         
         // Send the first tick to start the simulation
         sendBroadcast(new TickBroadcast(1));
+        StatisticalFolder.getInstance().incrementSystemRuntime();
         currentTick++;
     }
 }

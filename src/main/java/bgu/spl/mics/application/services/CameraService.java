@@ -8,6 +8,7 @@ import bgu.spl.mics.application.objects.STATUS;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.objects.StatisticalFolder;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.FrequencyBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
@@ -43,6 +44,8 @@ public class CameraService extends MicroService {
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             int currentTime = tickBroadcast.getCurrentTime();
             Message msg = camera.operateTick(currentTime);
+            if (msg instanceof FrequencyBroadcast)
+                sendBroadcast((FrequencyBroadcast)msg);
             if (msg instanceof TerminatedBroadcast) {
                 sendBroadcast((TerminatedBroadcast)msg);
                 camera.setStatus(STATUS.DOWN);
