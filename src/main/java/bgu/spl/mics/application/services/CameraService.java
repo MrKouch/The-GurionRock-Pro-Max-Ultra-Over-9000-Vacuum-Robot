@@ -5,8 +5,6 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.Message;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.STATUS;
-import bgu.spl.mics.application.objects.StampedDetectedObjects;
-import bgu.spl.mics.application.objects.StatisticalFolder;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.messages.FrequencyBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
@@ -47,8 +45,6 @@ public class CameraService extends MicroService {
                 sendBroadcast(new FrequencyBroadcast(camera.getFrequency()));
             }
             Message msg = camera.operateTick(currentTime);
-            // if (msg instanceof FrequencyBroadcast)
-            //     sendBroadcast((FrequencyBroadcast)msg);
             if (msg instanceof TerminatedBroadcast) {
                 sendBroadcast((TerminatedBroadcast)msg);
                 this.terminate();
@@ -64,7 +60,6 @@ public class CameraService extends MicroService {
         });
 
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
-            // make sure - what happens in terminate()?
             if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
                 sendBroadcast(new TerminatedBroadcast(CameraService.class, "camera - The time has reached the Duration limit."));
                 camera.setStatus(STATUS.DOWN);
@@ -72,7 +67,6 @@ public class CameraService extends MicroService {
             }
         });
 
-        // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             if (camera.getLastDetectedObjects().getTime() == crashedBroadcast.getCrashedTime())
                 camera.setLastDetectedObjectsToPrev();

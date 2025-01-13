@@ -32,7 +32,6 @@ public class TimeService extends MicroService {
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (tickBroadcast) -> {
             if (currentTick == duration + 1) {
-                System.out.println("end");
                 sendBroadcast(new TerminatedBroadcast(TimeService.class, "The time has reached the Duration limit."));
                 this.terminate();
             }

@@ -75,6 +75,23 @@ public class Camera {
         return "NO ERROR";
     }
     
+    /**
+     * @PRE:
+     * - `currentTime` must be a non-negative integer.
+     * - `detectedObjects` must be properly initialized (not null).
+     *
+     * @POST:
+     * - If `currentTime` exceeds `getLatestDetectionTime() + getFrequency()`:
+     *   - The camera status is set to `STATUS.DOWN`.
+     *   - A `TerminatedBroadcast` message is returned.
+     * - If an error object is detected at the current time:
+     *   - The camera status is set to `STATUS.ERROR`.
+     *   - A `CrashedBroadcast` message is returned with the error description.
+     * - If no error occurs:
+     *   - `lastDetectedObjects` and `prevLastDetectedObjects` may be updated.
+     *   - If ready detected objects are available, a `DetectObjectsEvent` is returned.
+     * - If none of the above cases occur, the method returns `null`.
+     */
     public Message operateTick(int currentTime) {
         if (currentTime > getLatestDetectionTime() + getFrequency()) {
             setStatus(STATUS.DOWN);
@@ -99,10 +116,15 @@ public class Camera {
     
 
     // Getters and Setters
+
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public int getId() {
         return id;
     }
 
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public int getFrequency() {
         return frequency;
     }
@@ -119,10 +141,14 @@ public class Camera {
         this.status = status;
     }
 
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public HashMap<Integer, StampedDetectedObjects> getDetectedObjects() {
         return detectedObjects;
     }
 
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public int getLatestDetectionTime() {
         return latestDetectionTime;
     }

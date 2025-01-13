@@ -1,17 +1,11 @@
 package bgu.spl.mics.application.services;
 
-import java.util.Iterator;
-
-import javax.sound.midi.Track;
-
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.PoseEvent;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.FusionSlam;
-import bgu.spl.mics.application.objects.LandMark;
 import bgu.spl.mics.application.objects.Pose;
 import bgu.spl.mics.application.objects.TrackedObject;
 
@@ -41,9 +35,7 @@ public class FusionSlamService extends MicroService {
         this.fusionSlam.oneLessActiveSensor();
         int currActiveSensors = this.fusionSlam.getActiveSensors();
         if (currActiveSensors == 0) {
-            System.out.println("fusion terminated");
             sendBroadcast(new TerminatedBroadcast(FusionSlamService.class, whyTerminated));
-            // download a report
             this.terminate();
         }
     }
@@ -57,22 +49,15 @@ public class FusionSlamService extends MicroService {
     protected void initialize() {
         subscribeEvent(PoseEvent.class, poseEvent -> {
             Pose currPose = poseEvent.getCurrentPose();
-            // fusionSlam.getposes().add(currPose.getTime(), currPose);
             fusionSlam.addPose(currPose.getTime(), currPose);
             for(TrackedObject object : fusionSlam.getWaitingTrackedObjects()) {
                 fusionSlam.addOrUpdateLandMark(object, currPose);
-                //fusionSlam.addOrUpdateLandMark(object, fusionSlam.getposes().get(object.getTime()));
             }
             fusionSlam.clearWaitingTrackedObjects();
         });
         
         subscribeEvent(TrackedObjectsEvent.class, trackedObjectsEvent -> {
-            // Iterator<TrackedObject> trackedIter = trackedObjectsEvent.getTrackedObjects().iterator();
-            // while(trackedIter.hasNext()) {
-            //     TrackedObject nextTrackedObject = trackedIter.next();
-            // }
             for(TrackedObject object : trackedObjectsEvent.getTrackedObjects()) {
-                // Pose currentPose = fusionSlam.getposes().get(object.getTime());
                 Pose currentPose = fusionSlam.getPose(object.getTime());
                 if(currentPose == null) {
                     fusionSlam.getWaitingTrackedObjects().add(object);

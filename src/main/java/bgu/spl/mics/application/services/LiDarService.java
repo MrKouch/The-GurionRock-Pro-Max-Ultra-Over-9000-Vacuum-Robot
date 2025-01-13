@@ -1,8 +1,5 @@
 package bgu.spl.mics.application.services;
 
-import java.util.LinkedList;
-import java.util.List;
-import bgu.spl.mics.Future;
 import bgu.spl.mics.Message;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
@@ -11,11 +8,9 @@ import bgu.spl.mics.application.messages.FrequencyBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
-import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
 import bgu.spl.mics.application.objects.STATUS;
 import bgu.spl.mics.application.objects.StatisticalFolder;
-import bgu.spl.mics.application.objects.TrackedObject;
 
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
@@ -60,11 +55,8 @@ public class LiDarService extends MicroService {
                 this.terminate();
             }
             else if (msg instanceof TrackedObjectsEvent) {
-                // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-                System.out.println("sending tracke event");
                 sendEvent((TrackedObjectsEvent)msg);
                 StatisticalFolder.getInstance().incrementNumTrackedObjects(liDarWorkerTracker.getTrackedAdds());
-                // Empty the last tracked objects list
                 liDarWorkerTracker.getWaitingObjects().clear();
                 liDarWorkerTracker.resetTrackedAdds();
             }
@@ -80,7 +72,6 @@ public class LiDarService extends MicroService {
             liDarWorkerTracker.getStampedDetectedObjects().add((detectObjectsEvent).getStampedDetectedObjects());
         });
 
-        // NOT SURE
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
             if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
                 sendBroadcast(new TerminatedBroadcast(LiDarService.class, "lidar - The time has reached the Duration limit."));
@@ -89,7 +80,6 @@ public class LiDarService extends MicroService {
             }
         });
 
-        // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             if (liDarWorkerTracker.getLastDetectionTime() == crashedBroadcast.getCrashedTime())
                 liDarWorkerTracker.setLastTrackedObjectsToPrev();
