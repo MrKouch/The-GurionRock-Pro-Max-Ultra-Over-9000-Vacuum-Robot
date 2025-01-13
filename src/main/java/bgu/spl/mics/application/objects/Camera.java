@@ -78,15 +78,18 @@ public class Camera {
     }
     
     public Message operateTick(int currentTime) {
-        if (currentTime == 1)
-            return new FrequencyBroadcast(frequency);
+        // if (currentTime == 1)
+        //     return new FrequencyBroadcast(frequency);
         if (currentTime > getLatestDetectionTime() + getFrequency()) {
+            setStatus(STATUS.DOWN);
             return new TerminatedBroadcast(CameraService.class, getId() + " finished");
         }
         else {
             String errorDescription = hasErrorNow(currentTime);
-            if (!errorDescription.equals("NO ERROR"))
+            if (!errorDescription.equals("NO ERROR")) {
+                setStatus(STATUS.ERROR);
                 return new CrashedBroadcast("Camera " + getId(), errorDescription, currentTime);
+            }
             else {
                 updateLastDetectedObjects(currentTime);
                 StampedDetectedObjects readyDetectedObjects = getReadyDetectedObjects(currentTime);

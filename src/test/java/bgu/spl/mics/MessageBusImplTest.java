@@ -2,7 +2,6 @@ package bgu.spl.mics;
 
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.objects.Camera;
-import bgu.spl.mics.application.objects.STATUS;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.services.CameraService;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +30,8 @@ class MessageBusImplTest {
      */
     @Test
     void registerTest() {
-        CameraService ms2 = new CameraService(new Camera(2, 2, null)); // Example MicroServices
+        HashMap<Integer, StampedDetectedObjects> objects2 = new HashMap<>();
+        CameraService ms2 = new CameraService(new Camera(2, 2, objects2)); // Example MicroServices
         assertFalse(theBus.getRegisteredMS().containsKey(ms2));
         theBus.register(ms2);
         assertTrue(theBus.getRegisteredMS().containsKey(ms2));

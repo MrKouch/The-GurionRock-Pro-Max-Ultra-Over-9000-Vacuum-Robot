@@ -43,17 +43,18 @@ public class CameraService extends MicroService {
         System.out.println("Camera Service " + getName() + " has started");
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
             int currentTime = tickBroadcast.getCurrentTime();
+            if (currentTime == 1) {
+                sendBroadcast(new FrequencyBroadcast(camera.getFrequency()));
+            }
             Message msg = camera.operateTick(currentTime);
-            if (msg instanceof FrequencyBroadcast)
-                sendBroadcast((FrequencyBroadcast)msg);
+            // if (msg instanceof FrequencyBroadcast)
+            //     sendBroadcast((FrequencyBroadcast)msg);
             if (msg instanceof TerminatedBroadcast) {
                 sendBroadcast((TerminatedBroadcast)msg);
-                camera.setStatus(STATUS.DOWN);
                 this.terminate();
             }
             else if (msg instanceof CrashedBroadcast) {
                 sendBroadcast((CrashedBroadcast)msg);
-                camera.setStatus(STATUS.ERROR);
                 this.terminate();
 
             }

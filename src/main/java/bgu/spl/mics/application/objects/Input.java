@@ -71,7 +71,7 @@ public class Input {
             int id = ((Double) config.get("id")).intValue();
             int frequency = ((Double) config.get("frequency")).intValue();
             String cameraKey = (String) config.get("camera_key");
-    
+
             HashMap<Integer, StampedDetectedObjects> detectedObjects = new HashMap<>();
     
             if (rawCameraData.containsKey(cameraKey)) {
@@ -117,7 +117,6 @@ public class Input {
                 coordinates.add(new CloudPoint(x, y));
             }
     
-            // Initialize TrackedObject with "default description"
             trackedObjects.add(new TrackedObject(id, time, getDescription(id), coordinates));
         }
     
@@ -159,6 +158,19 @@ public class Input {
         return cameras;
     }
 
+    private String getDescription(String id) {
+        for (Camera camera : cameras) {
+            for (Integer timeKey : camera.getDetectedObjects().keySet()) {
+                StampedDetectedObjects stamped = camera.getDetectedObjects().get(timeKey);
+                for (DetectedObject detectedObject : stamped.getDetectedObjects()) {
+                    if (detectedObject.getId().equals(id))
+                        return detectedObject.getDescription();
+                }
+            }
+        }
+        return "default";
+    }
+
     public List<LiDarWorkerTracker> getLidarWorkers() {
         return lidarWorkers;
     }
@@ -194,21 +206,5 @@ public class Input {
         sb.append("Duration: ").append(getDuration()).append("\n");
     
         return sb.toString();
-    }
-
-    private String getDescription(String id) {
-        for (Camera camera : cameras) {
-            for (int i = 0; i < camera.getLatestDetectionTime(); i++) {
-                StampedDetectedObjects cameraDetections = camera.getDetectedObjects().get(i);
-                if(cameraDetections != null) {
-                    for(DetectedObject detectedObject : cameraDetections.getDetectedObjects()) {
-                        if(detectedObject.getId().equals(id)) {
-                            return detectedObject.getDescription();
-                        }
-                    }
-                }
-            }
-        }
-        return "default";
     }
 }

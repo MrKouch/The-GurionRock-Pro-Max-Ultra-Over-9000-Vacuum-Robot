@@ -133,6 +133,7 @@ public class MessageBusImpl implements MessageBus {
     public void unregister(MicroService m) {
         locker.writeLock().lock();
         try {
+            microServicesMessages.remove(m);
             Enumeration<Class<? extends Event<?>>> eventsEnu = eventsSubscribers.keys();
             while (eventsEnu.hasMoreElements()) { 
                 LinkedBlockingQueue<MicroService> currentQ = eventsSubscribers.get(eventsEnu.nextElement());

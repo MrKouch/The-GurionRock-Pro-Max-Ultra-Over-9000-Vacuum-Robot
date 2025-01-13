@@ -53,12 +53,10 @@ public class LiDarService extends MicroService {
             Message msg = liDarWorkerTracker.operateTick(currentTime, getName());
             if (msg instanceof TerminatedBroadcast) {
                 sendBroadcast((TerminatedBroadcast)msg);
-                liDarWorkerTracker.setStatus(STATUS.DOWN);
                 this.terminate();
             }
             else if (msg instanceof CrashedBroadcast) {
                 sendBroadcast((CrashedBroadcast)msg);
-                liDarWorkerTracker.setStatus(STATUS.ERROR);
                 this.terminate();
             }
             else if (msg instanceof TrackedObjectsEvent) {
