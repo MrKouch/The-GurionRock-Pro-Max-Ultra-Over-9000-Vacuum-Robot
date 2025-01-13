@@ -1,7 +1,6 @@
 package bgu.spl.mics.application.objects;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.management.RuntimeErrorException;
@@ -12,8 +11,8 @@ import javax.management.RuntimeErrorException;
  * Implements the Singleton pattern to ensure a single instance of FusionSlam exists.
  */
 public class FusionSlam {
-    private List<LandMark> landmarks; // Should be implemented as an array
-    private List<Pose> poses; // List of previous poses needed for calculations
+    private List<LandMark> landmarks;
+    private List<Pose> poses;
     private List<TrackedObject> waitingTrackedObjects;
     private int activeSensors;
     private String crashedSensorId;
@@ -62,8 +61,6 @@ public class FusionSlam {
 
     public Pose getPose(int time) {
         if (time > 0) {
-            // System.out.println("poses.size(): " + poses.size());
-            // System.out.println("time - 1: " + (time - 1));
             if (poses.size() > time - 1)
                 return poses.get(time - 1);
         }

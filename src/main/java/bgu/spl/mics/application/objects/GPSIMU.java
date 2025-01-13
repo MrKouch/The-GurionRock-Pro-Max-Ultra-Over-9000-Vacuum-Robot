@@ -1,5 +1,4 @@
 package bgu.spl.mics.application.objects;
-import java.util.LinkedList;
 import java.util.List;
 /**
  * Represents the robot's GPS and IMU system.
@@ -20,13 +19,6 @@ public class GPSIMU {
         this.poseList = poseList;
         this.latestDetectionTime = computeLatestDetectionTime();
     }
-
-    // public GPSIMU() {
-    //     this.currentTick = 0;
-    //     this.status = STATUS.UP;
-    //     this.poseList = new LinkedList<>();
-    //     this.latestDetectionTime = 0;
-    // }
 
     private int computeLatestDetectionTime() {
         int maxTime = 0;

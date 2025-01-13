@@ -6,7 +6,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import bgu.spl.mics.application.messages.CrashedBroadcast;
-import bgu.spl.mics.application.messages.PoseEvent;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.services.FusionSlamService;
 

@@ -1,5 +1,4 @@
 package bgu.spl.mics.application.objects;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 /**
@@ -7,8 +6,6 @@ import java.util.List;
  * It provides access to cloud point data and other relevant information for tracked objects.
  */
 public class LiDarDataBase {
-    // private HashMap<Integer, List<StampedCloudPoints>> cloudPoints;
-    // private HashMap<Integer, List<String>> IDsByDetectionTime;
     private List<TrackedObject> trackedObjects;
 
 
@@ -18,8 +15,6 @@ public class LiDarDataBase {
 
     // Constructor
     private LiDarDataBase() {
-        // this.cloudPoints = new HashMap<Integer, StampedCloudPoints>();
-        // this.IDsByDetectionTime = new HashMap<Integer, List<String>>();
         this.trackedObjects = new LinkedList<>();
     }
 
@@ -33,13 +28,6 @@ public class LiDarDataBase {
         return LiDarDataBaseHolder.instance;
     }
 
-    // public HashMap<Integer, StampedCloudPoints> getCloudPoints() {
-    //     return cloudPoints;
-    // }
-
-    // public HashMap<Integer, List<String>> getIDsByDetectionTime() {
-    //     return IDsByDetectionTime;
-    // }
     public List<TrackedObject> getTrackedObjects() {
         return trackedObjects;
     }

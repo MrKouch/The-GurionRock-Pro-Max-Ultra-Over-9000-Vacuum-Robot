@@ -116,27 +116,12 @@ public class LiDarWorkerTracker {
                             waitingObjects.add(trackedObject);
                             this.trackedAdds++;
                             detectedIter.remove();
-                            // stamped.getDetectedObjects().remove(detectedObject);
                         }
                     }
                 }
             }
         }
         
-        // for (StampedDetectedObjects objects : stampedDetectedObjects) {
-        //     if(objects.getTime() + frequency <= currentTime) {
-        //         for (DetectedObject detectedObject : objects.getDetectedObjects()) {
-        //             for (TrackedObject trackedObject : LiDarDataBase.getInstance().getTrackedObjects()) {
-        //                 if(trackedObject.getId().equals(detectedObject.getId())) {
-        //                     trackedObject.setDescription(detectedObject.getDescription());
-        //                     waitingObjects.add(trackedObject);
-        //                     this.trackedAdds++;
-        //                     objects.getDetectedObjects().remove(detectedObject);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     public int getTrackedAdds() {
@@ -179,7 +164,6 @@ public class LiDarWorkerTracker {
         if (newTracks > 0) {
             this.prevLastTrackedObjects = new LinkedList<>(this.lastTrackedObjects);
             this.lastTrackedObjects = latestObjects;
-            // StatisticalFolder.getInstance().incrementNumTrackedObjects(newTracks);
         }
     }
 
@@ -187,15 +171,7 @@ public class LiDarWorkerTracker {
         if (currentTime == getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1 && !getStampedDetectedObjects().isEmpty()) {
             System.out.println("happened");
             return handleTrackedSending(currentTime, senderId);
-            // updateStatistics(currentTime);
-            // detectedToTracked(currentTime);
-            // // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-            // if (waitingObjects.size() > 0) {
-            //     List<TrackedObject> waitingObjectsCopy = new LinkedList<>(getWaitingObjects());
-            //     return new TrackedObjectsEvent(senderId, waitingObjectsCopy);
-            // }
         }
-        // if (currentTime > getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1)
         else if (currentTime > getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1) {
             setStatus(STATUS.DOWN);
             return new TerminatedBroadcast(LiDarService.class, getId() + " finished");
@@ -208,13 +184,6 @@ public class LiDarWorkerTracker {
             }
             else {
                 return handleTrackedSending(currentTime, senderId);
-                // updateStatistics(currentTime);
-                // detectedToTracked(currentTime);
-                // // Transfer the latest tracked objects data to the fusionSLAM using the message bus
-                // if (waitingObjects.size() > 0) {
-                //     List<TrackedObject> waitingObjectsCopy = new LinkedList<>(getWaitingObjects());
-                //     return new TrackedObjectsEvent(senderId, waitingObjectsCopy);
-                // }
             }
         }
     }
