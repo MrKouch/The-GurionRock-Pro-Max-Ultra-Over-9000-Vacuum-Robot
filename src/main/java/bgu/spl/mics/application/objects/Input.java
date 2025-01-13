@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 public class Input {
     private List<Camera> cameras;
@@ -39,7 +38,7 @@ public class Input {
         String cameraDataPath = directory + File.separator + camerasConfig.get("camera_datas_path");
         List<Map<String, Object>> cameraConfigurations = (List<Map<String, Object>>) camerasConfig.get("CamerasConfigurations");
 
-        Map<String, Object> lidarConfig = (Map<String, Object>) config.get("LidarWorkers");
+        Map<String, Object> lidarConfig = (Map<String, Object>) config.get("LiDarWorkers");
         String lidarDataPath = directory + File.separator + lidarConfig.get("lidars_data_path");
         List<Map<String, Object>> lidarConfigurations = (List<Map<String, Object>>) lidarConfig.get("LidarConfigurations");
 
@@ -119,7 +118,7 @@ public class Input {
             }
     
             // Initialize TrackedObject with "default description"
-            trackedObjects.add(new TrackedObject(id, time, "default description", coordinates));
+            trackedObjects.add(new TrackedObject(id, time, getDescription(id), coordinates));
         }
     
         lidarDatabase.setTrackedObjects(trackedObjects);
@@ -195,5 +194,21 @@ public class Input {
         sb.append("Duration: ").append(getDuration()).append("\n");
     
         return sb.toString();
+    }
+
+    private String getDescription(String id) {
+        for (Camera camera : cameras) {
+            for (int i = 0; i < camera.getLatestDetectionTime(); i++) {
+                StampedDetectedObjects cameraDetections = camera.getDetectedObjects().get(i);
+                if(cameraDetections != null) {
+                    for(DetectedObject detectedObject : cameraDetections.getDetectedObjects()) {
+                        if(detectedObject.getId().equals(id)) {
+                            return detectedObject.getDescription();
+                        }
+                    }
+                }
+            }
+        }
+        return "default";
     }
 }
