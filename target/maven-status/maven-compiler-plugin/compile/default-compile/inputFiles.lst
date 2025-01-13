@@ -2,8 +2,9 @@
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/Event.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/messages/CrashedBroadcast.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/DetectedObject.java
-/workspaces/Skeleton/src/main/java/bgu/spl/mics/GsonTest.java
+/workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/Output.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/messages/DetectObjectsEvent.java
+/workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/Input.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/LiDarWorkerTracker.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/Camera.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/MessageBus.java
@@ -35,6 +36,7 @@
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/example/ServiceCreator.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/Pose.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/TrackedObject.java
+/workspaces/Skeleton/src/main/java/bgu/spl/mics/application/messages/FrequencyBroadcast.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/messages/TerminatedBroadcast.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/MessageBusImpl.java
 /workspaces/Skeleton/src/main/java/bgu/spl/mics/application/objects/STATUS.java

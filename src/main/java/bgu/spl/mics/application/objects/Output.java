@@ -3,8 +3,6 @@ package bgu.spl.mics.application.objects;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import bgu.spl.mics.application.services.PoseService;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -15,14 +13,16 @@ import java.util.List;
 public class Output {
     
     private String outputFilePath;
+    private String inputFilePath;
     
     public Output(String inputFilePath) {
         // Set the output file path to the same directory as the input configuration file
         System.out.println("write to: " + Paths.get(inputFilePath).getParent());
-        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("output2setty.json").toString();
+        this.inputFilePath = inputFilePath;
     }
     
     public void generateNormalOutputFile() {
+        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("output_file.json").toString();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         LinkedHashMap<String, Object> outputData = new LinkedHashMap<>();
         
@@ -42,6 +42,7 @@ public class Output {
     public void generateErrorOutputFile(HashMap<Camera, StampedDetectedObjects> lastDetectedObjects,
     HashMap<LiDarWorkerTracker, List<TrackedObject>> lastTrackedObjects,
     String faultySensor, String errorDescription) {
+        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("OutputError.json").toString();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         LinkedHashMap<String, Object> outputData = new LinkedHashMap<>();
         

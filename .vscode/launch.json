@@ -18,7 +18,7 @@
             "request": "launch",
             "mainClass": "bgu.spl.mics.application.GurionRockRunner",
             "projectName": "spl225ass2",
-            "args": ["/workspaces/The-GurionRock-Pro-Max-Ultra-Over-9000-Vacuum-Robot/example_input_with_error/configuration_file.json"]
+            "args": ["/workspaces/Skeleton/example_input_2/configuration_file.json"]
         },
         {
             "type": "java",

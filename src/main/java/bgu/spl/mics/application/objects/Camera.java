@@ -1,11 +1,9 @@
 package bgu.spl.mics.application.objects;
 import java.util.HashMap;
 
-import bgu.spl.mics.Future;
 import bgu.spl.mics.Message;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
-import bgu.spl.mics.application.messages.FrequencyBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.services.CameraService;
 /**
@@ -95,8 +93,6 @@ public class Camera {
      * - If none of the above cases occur, the method returns `null`.
      */
     public Message operateTick(int currentTime) {
-        // if (currentTime == 1)
-        //     return new FrequencyBroadcast(frequency);
         if (currentTime > getLatestDetectionTime() + getFrequency()) {
             setStatus(STATUS.DOWN);
             return new TerminatedBroadcast(CameraService.class, getId() + " finished");
