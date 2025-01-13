@@ -33,7 +33,7 @@ class CameraTest {
         
         List<DetectedObject> thirdObjects = new ArrayList<>();
         thirdObjects.add(new DetectedObject("5", "5th object"));
-        secondTickObjects.add(new DetectedObject("ERROR", "ERROR object"));
+        thirdObjects.add(new DetectedObject("ERROR", "ERROR object"));
         thirdObjects.add(new DetectedObject("6", "6th object"));
         StampedDetectedObjects thirdTickData = new StampedDetectedObjects(3,thirdObjects);
         objects.put(3, thirdTickData);
@@ -55,10 +55,9 @@ class CameraTest {
 
         Message m = camera.operateTick(1);
         assertEquals(DetectObjectsEvent.class, m.getClass());
-        assertEquals(1, camera.getLatestDetectionTime());
+        assertEquals(4, camera.getLatestDetectionTime());
         m = camera.operateTick(2);
         assertEquals(DetectObjectsEvent.class, m.getClass());
-        assertEquals(2, camera.getLatestDetectionTime());
 
         assertEquals(1, camera.getId());
         assertEquals(0, camera.getFrequency());

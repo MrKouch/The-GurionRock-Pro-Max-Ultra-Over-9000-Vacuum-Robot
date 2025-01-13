@@ -18,7 +18,8 @@ public class Output {
     
     public Output(String inputFilePath) {
         // Set the output file path to the same directory as the input configuration file
-        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("output2.json").toString();
+        System.out.println("write to: " + Paths.get(inputFilePath).getParent());
+        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("output2setty.json").toString();
     }
     
     public void generateNormalOutputFile() {

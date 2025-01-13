@@ -39,7 +39,7 @@ public class Input {
         String cameraDataPath = directory + File.separator + camerasConfig.get("camera_datas_path");
         List<Map<String, Object>> cameraConfigurations = (List<Map<String, Object>>) camerasConfig.get("CamerasConfigurations");
 
-        Map<String, Object> lidarConfig = (Map<String, Object>) config.get("LidarWorkers");
+        Map<String, Object> lidarConfig = (Map<String, Object>) config.get("LiDarWorkers");
         String lidarDataPath = directory + File.separator + lidarConfig.get("lidars_data_path");
         List<Map<String, Object>> lidarConfigurations = (List<Map<String, Object>>) lidarConfig.get("LidarConfigurations");
 
@@ -72,7 +72,7 @@ public class Input {
             int id = ((Double) config.get("id")).intValue();
             int frequency = ((Double) config.get("frequency")).intValue();
             String cameraKey = (String) config.get("camera_key");
-    
+
             HashMap<Integer, StampedDetectedObjects> detectedObjects = new HashMap<>();
     
             if (rawCameraData.containsKey(cameraKey)) {
@@ -118,8 +118,7 @@ public class Input {
                 coordinates.add(new CloudPoint(x, y));
             }
     
-            // Initialize TrackedObject with "default description"
-            trackedObjects.add(new TrackedObject(id, time, "default description", coordinates));
+            trackedObjects.add(new TrackedObject(id, time, getDescription(id), coordinates));
         }
     
         lidarDatabase.setTrackedObjects(trackedObjects);
@@ -158,6 +157,19 @@ public class Input {
 
     public List<Camera> getCameras() {
         return cameras;
+    }
+
+    private String getDescription(String id) {
+        for (Camera camera : cameras) {
+            for (Integer timeKey : camera.getDetectedObjects().keySet()) {
+                StampedDetectedObjects stamped = camera.getDetectedObjects().get(timeKey);
+                for (DetectedObject detectedObject : stamped.getDetectedObjects()) {
+                    if (detectedObject.getId().equals(id))
+                        return detectedObject.getDescription();
+                }
+            }
+        }
+        return "default";
     }
 
     public List<LiDarWorkerTracker> getLidarWorkers() {

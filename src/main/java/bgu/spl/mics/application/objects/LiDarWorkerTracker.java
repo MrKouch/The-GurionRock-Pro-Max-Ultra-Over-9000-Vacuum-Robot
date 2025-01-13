@@ -197,12 +197,15 @@ public class LiDarWorkerTracker {
         }
         // if (currentTime > getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1)
         else if (currentTime > getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1) {
+            setStatus(STATUS.DOWN);
             return new TerminatedBroadcast(LiDarService.class, getId() + " finished");
         }
         else {
             String errorDescription = hasErrorNow(currentTime);
-            if (!errorDescription.equals("NO ERROR"))
+            if (!errorDescription.equals("NO ERROR")) {
+                setStatus(STATUS.ERROR);
                 return new CrashedBroadcast("liDarWorkerTracker " + getId(), errorDescription, currentTime);
+            }
             else {
                 return handleTrackedSending(currentTime, senderId);
                 // updateStatistics(currentTime);
