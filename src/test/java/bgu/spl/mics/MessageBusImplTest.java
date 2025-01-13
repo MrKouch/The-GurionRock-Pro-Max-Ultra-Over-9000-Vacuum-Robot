@@ -24,10 +24,6 @@ class MessageBusImplTest {
         theBus.register(ms1);
     }
 
-    /**@inv TODO
-     * @pre TODO
-     * @post TODO
-     */
     @Test
     void registerTest() {
         HashMap<Integer, StampedDetectedObjects> objects2 = new HashMap<>();
@@ -37,21 +33,13 @@ class MessageBusImplTest {
         assertTrue(theBus.getRegisteredMS().containsKey(ms2));
     }
 
-    /**@inv TODO
-     * @pre TODO
-     * @post TODO
-     */
     @Test
     void unregisterTest() {
         assertTrue(theBus.getRegisteredMS().containsKey(ms1));
         theBus.unregister(ms1);
         assertFalse(theBus.getRegisteredMS().containsKey(ms1));
     }
-
-    /**@inv TODO
-     * @pre  TODO
-     * @post TODO
-     */
+    
     @Test
     void subscribeBroadcastTest() {
         assertTrue(theBus.getBroadcastsSubscribers().isEmpty());

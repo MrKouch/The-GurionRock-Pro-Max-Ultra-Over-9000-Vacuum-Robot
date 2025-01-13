@@ -6,7 +6,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import bgu.spl.mics.application.messages.CrashedBroadcast;
-import bgu.spl.mics.application.messages.PoseEvent;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.services.FusionSlamService;
 
@@ -28,9 +27,6 @@ public class MessageBusImpl implements MessageBus {
     private ConcurrentHashMap<Event<?>, Future<?>> eventsFutures;
     
     private ReentrantReadWriteLock locker;
-    // private ReentrantReadWriteLock microServicesReadWriteLock;
-    // private ReentrantReadWriteLock eventsReadWriteLock;
-    // private ReentrantReadWriteLock broadcastsReadWriteLock;
 
 
     private MessageBusImpl() {
@@ -38,9 +34,6 @@ public class MessageBusImpl implements MessageBus {
         broadcastsSubscribers = new ConcurrentHashMap<>();
         microServicesMessages = new ConcurrentHashMap<>();
         eventsFutures = new ConcurrentHashMap<>();
-        // microServicesReadWriteLock = new ReentrantReadWriteLock();
-        // eventsReadWriteLock = new ReentrantReadWriteLock();
-        // broadcastsReadWriteLock = new ReentrantReadWriteLock();
         locker = new ReentrantReadWriteLock();
 
     }
@@ -57,21 +50,13 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         eventsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
-        eventsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
-		
-		// Its better to use computeIfAbsent
-		// IMPROVEMENT SUGGESTION
-
-		// eventsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
+        eventsSubscribers.get(type).add(m);
     }
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
         broadcastsSubscribers.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
-        broadcastsSubscribers.get(type).add(m); // MAKE SURE: Can we assume that m is not in the queue right now?
-		// Its better to use computeIfAbsent
-		// IMPROVEMENT SUGGESTION
-		// broadcastsSubscribers.computeIfAbsent(type, k -> new LinkedBlockingQueue<MicroService>()).add((m));
+        broadcastsSubscribers.get(type).add(m);
     }
 
     @Override
@@ -93,10 +78,6 @@ public class MessageBusImpl implements MessageBus {
                 if (b instanceof CrashedBroadcast || (b instanceof TerminatedBroadcast && ((TerminatedBroadcast)b).getServiceWhoTerminated() == FusionSlamService.class))
                     microServicesMessages.get(m).addFirst(b);
                 else {
-                    if (microServicesMessages.get(m) == null) {
-                        System.out.println("m: " + m);
-                        System.out.println("microServicesMessages.get(m) null");
-                    }
                     microServicesMessages.get(m).addLast(b);
                 }
             }  
@@ -114,10 +95,9 @@ public class MessageBusImpl implements MessageBus {
             MicroService m = eventsSubscribers.get(e.getClass()).remove();
             microServicesMessages.get(m).addLast(e);
             eventsSubscribers.get(e.getClass()).add(m);
-            //sync - unlock
             Future<T> future = new Future<T>();
             eventsFutures.put(e, future);
-            return future; // MAKE SURE
+            return future;
         } finally {
             locker.writeLock().unlock();
         }
@@ -157,13 +137,17 @@ public class MessageBusImpl implements MessageBus {
 		if(queue == null) {
 			throw new IllegalStateException("MicroService is not registered");
 		}
-        return queue.take(); // Blocks until a message is available
+        return queue.take();
     }
 
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public ConcurrentHashMap<MicroService, LinkedBlockingDeque<Message>> getRegisteredMS() {
         return microServicesMessages;
     }
     
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public ConcurrentHashMap<Class<? extends Broadcast>, LinkedBlockingQueue<MicroService>> getBroadcastsSubscribers() {
         return broadcastsSubscribers;
     }

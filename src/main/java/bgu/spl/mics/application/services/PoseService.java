@@ -5,7 +5,6 @@ import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.PoseEvent;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.objects.FusionSlam;
 import bgu.spl.mics.application.objects.GPSIMU;
 import bgu.spl.mics.application.objects.Pose;
 import bgu.spl.mics.application.objects.STATUS;
@@ -47,7 +46,6 @@ public class PoseService extends MicroService {
             }
         });
 
-        // NOT SURE
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
             if (terminatedBroadcast.getServiceWhoTerminated() == TimeService.class) {
                 sendBroadcast(new TerminatedBroadcast(PoseService.class, "pose - The time has reached the Duration limit."));
@@ -56,7 +54,6 @@ public class PoseService extends MicroService {
             }
         });
 
-        // NOT SURE
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             sendBroadcast(new TerminatedBroadcast(PoseService.class, "pose - other sensor has been creshed."));
             gpsimu.setStatus(STATUS.DOWN);

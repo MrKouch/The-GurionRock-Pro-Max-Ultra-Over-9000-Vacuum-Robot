@@ -38,7 +38,9 @@ public class FusionSlam {
     public static FusionSlam getInstance() {
         return FusionSlamHolder.instance;
     }
-    // Getters and Setters
+    
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public List<LandMark> getLandmarks() {
         return landmarks;
     }
@@ -60,6 +62,8 @@ public class FusionSlam {
         return poses;
     }
 
+    // @PRE: none
+    // @POST: trivial (simple getter)
     public Pose getPose(int time) {
         if (time > 0) {
             // System.out.println("poses.size(): " + poses.size());
@@ -101,6 +105,21 @@ public class FusionSlam {
         return landMarCloudPoints;
     }
 
+     /**
+     * @PRE:
+     * - `tracked` must be a non-null instance of `TrackedObject`.
+     * - `pose` must be a non-null instance of `Pose`.
+     * - `tracked.getCoordinates()` must not be null and must contain valid coordinates.
+     *
+     * @POST:
+     * - If no landmark with the same ID as `tracked.getId()` exists:
+     *   - A new `LandMark` is created and added to the `landmarks` list.
+     *   - The number of landmarks in the `StatisticalFolder` is incremented.
+     * - If a landmark with the same ID as `tracked.getId()` exists:
+     *   - Its `coordinates` list is updated with averaged values from the existing and new `CloudPoint` data.
+     *   - Any additional `CloudPoint` objects from the new data are appended to the existing list.
+     * - The `landmarks` list is updated to reflect the new or modified landmark.
+     */
     public void addOrUpdateLandMark(TrackedObject tracked, Pose pose) {
         List<CloudPoint> newCloudPoints = calculateLandMarkCloudPoints(tracked, pose);
         int landmarkIndex = landmarkIndex(tracked);

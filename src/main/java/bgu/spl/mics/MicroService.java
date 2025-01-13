@@ -92,7 +92,6 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
-        // CHANGE TO COMPUTEIFABSENT
         broadcastsCallBacksDictionary.putIfAbsent(type, callback);
         theBus.subscribeBroadcast(type, this);
     }
@@ -173,10 +172,12 @@ public abstract class MicroService implements Runnable {
             try {
                 Message msg = theBus.awaitMessage(this);
                 if (msg instanceof Event) {
+                    @SuppressWarnings("unchecked")
                     Callback<Message> cb = (Callback<Message>) eventsCallBacksDictionary.get(msg.getClass());
                     cb.call(msg);
                 }
                 if (msg instanceof Broadcast) {
+                    @SuppressWarnings("unchecked")
                     Callback<Message> cb = (Callback<Message>) broadcastsCallBacksDictionary.get(msg.getClass());
                     cb.call(msg);
                 }

@@ -32,7 +32,6 @@ public class TimeService extends MicroService {
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, (tickBroadcast) -> {
             if (currentTick == duration + 1) {
-                System.out.println("end");
                 sendBroadcast(new TerminatedBroadcast(TimeService.class, "The time has reached the Duration limit."));
                 this.terminate();
             }
@@ -42,7 +41,7 @@ public class TimeService extends MicroService {
                 StatisticalFolder.getInstance().incrementSystemRuntime();
             }
             try {
-                Thread.sleep(interval*500);
+                Thread.sleep(interval*1000);
             } catch (InterruptedException e) {
                 System.out.println("catch InterruptedException e");
                 System.out.println("Time service was interuped while sleeping");
