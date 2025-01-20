@@ -121,9 +121,7 @@ public class MessageBusImpl implements MessageBus {
             LinkedBlockingQueue<MicroService> currentQ = broadcastsSubscribers.get(broadcastsEnu.nextElement());
             currentQ.remove(m);
         }
-        synchronized (microServicesMessages) {
             microServicesMessages.remove(m); // Calling it again, in case more broadcasts calls were added until m was removed from the subscribers queue
-        }
         
     }
 

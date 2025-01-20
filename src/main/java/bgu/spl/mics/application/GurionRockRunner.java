@@ -1,9 +1,7 @@
 package bgu.spl.mics.application;
 
-import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.FusionSlam;
-import bgu.spl.mics.application.objects.GPSIMU;
 import bgu.spl.mics.application.objects.Input;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
 import bgu.spl.mics.application.objects.Output;
