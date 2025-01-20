@@ -169,7 +169,6 @@ public class LiDarWorkerTracker {
 
     public Message operateTick(int currentTime, String senderId) {
         if (currentTime == getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1 && !getStampedDetectedObjects().isEmpty()) {
-            System.out.println("happened");
             return handleTrackedSending(currentTime, senderId);
         }
         else if (currentTime > getLatestDetectionTime() + Math.max(getFrequency(), getMaxCameraFreq()) + 1) {
