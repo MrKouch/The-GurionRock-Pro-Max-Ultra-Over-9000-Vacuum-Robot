@@ -22,7 +22,7 @@ public class Output {
     }
     
     public void generateNormalOutputFile() {
-        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("output_file.json").toString();
+        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("output_filetest.json").toString();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         LinkedHashMap<String, Object> outputData = new LinkedHashMap<>();
         
@@ -42,7 +42,7 @@ public class Output {
     public void generateErrorOutputFile(HashMap<Camera, StampedDetectedObjects> lastDetectedObjects,
     HashMap<LiDarWorkerTracker, List<TrackedObject>> lastTrackedObjects,
     String faultySensor, String errorDescription) {
-        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("OutputError.json").toString();
+        this.outputFilePath = Paths.get(inputFilePath).getParent().resolve("OutputErrorTest.json").toString();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         LinkedHashMap<String, Object> outputData = new LinkedHashMap<>();
         

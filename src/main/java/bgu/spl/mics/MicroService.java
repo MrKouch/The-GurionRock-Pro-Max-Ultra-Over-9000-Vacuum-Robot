@@ -182,6 +182,7 @@ public abstract class MicroService implements Runnable {
                     cb.call(msg);
                 }
             } catch (InterruptedException e) {
+                theBus.unregister(this);
                 System.out.println("InterruptedException happened - MicroService");
             } catch (IllegalStateException e) {
                 System.out.println("IllegalStateException happened - MicroService");

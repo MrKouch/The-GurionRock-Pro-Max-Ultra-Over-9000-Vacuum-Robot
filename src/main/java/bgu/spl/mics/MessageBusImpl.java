@@ -1,5 +1,6 @@
 package bgu.spl.mics;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -25,8 +26,6 @@ public class MessageBusImpl implements MessageBus {
     private ConcurrentHashMap<Class<? extends Broadcast>, LinkedBlockingQueue<MicroService>> broadcastsSubscribers;
     private ConcurrentHashMap<MicroService, LinkedBlockingDeque<Message>> microServicesMessages;
     private ConcurrentHashMap<Event<?>, Future<?>> eventsFutures;
-    
-    private ReentrantReadWriteLock locker;
 
 
     private MessageBusImpl() {
@@ -34,8 +33,6 @@ public class MessageBusImpl implements MessageBus {
         broadcastsSubscribers = new ConcurrentHashMap<>();
         microServicesMessages = new ConcurrentHashMap<>();
         eventsFutures = new ConcurrentHashMap<>();
-        locker = new ReentrantReadWriteLock();
-
     }
 
     private static class MessageBusHolder {
@@ -70,37 +67,36 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        locker.writeLock().lock();
-        try {
-            Iterator<MicroService> bSubscribers = broadcastsSubscribers.get(b.getClass()).iterator();
-            while (bSubscribers.hasNext()) {
-                MicroService m = bSubscribers.next();
-                if (b instanceof CrashedBroadcast || (b instanceof TerminatedBroadcast && ((TerminatedBroadcast)b).getServiceWhoTerminated() == FusionSlamService.class))
+        Iterator<MicroService> bSubscribers = broadcastsSubscribers.get(b.getClass()).iterator();
+        while (bSubscribers.hasNext()) {
+            MicroService m = bSubscribers.next();
+            synchronized (microServicesMessages) {
+                if (microServicesMessages.get(m) != null) {
+                    if (b instanceof CrashedBroadcast || (b instanceof TerminatedBroadcast && ((TerminatedBroadcast)b).getServiceWhoTerminated() == FusionSlamService.class))
                     microServicesMessages.get(m).addFirst(b);
-                else {
-                    microServicesMessages.get(m).addLast(b);
+                    else {
+                        microServicesMessages.get(m).addLast(b);
+                    }   
                 }
-            }  
-        } finally {
-            locker.writeLock().unlock();
-        }
+            }
+        }  
         
     }
 
     
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        locker.writeLock().lock();
-        try {
+        synchronized (eventsSubscribers) {
             MicroService m = eventsSubscribers.get(e.getClass()).remove();
-            microServicesMessages.get(m).addLast(e);
             eventsSubscribers.get(e.getClass()).add(m);
-            Future<T> future = new Future<T>();
-            eventsFutures.put(e, future);
-            return future;
-        } finally {
-            locker.writeLock().unlock();
+            synchronized (microServicesMessages) {
+                if (microServicesMessages.get(m) != null)
+                    microServicesMessages.get(m).addLast(e);
+            }
         }
+        Future<T> future = new Future<T>();
+        eventsFutures.put(e, future);
+        return future;
     }
 
     @Override
@@ -111,22 +107,22 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void unregister(MicroService m) {
-        locker.writeLock().lock();
-        try {
-            microServicesMessages.remove(m);
+        microServicesMessages.remove(m);
+        synchronized (eventsSubscribers) {
             Enumeration<Class<? extends Event<?>>> eventsEnu = eventsSubscribers.keys();
             while (eventsEnu.hasMoreElements()) { 
                 LinkedBlockingQueue<MicroService> currentQ = eventsSubscribers.get(eventsEnu.nextElement());
                 currentQ.remove(m);
             }
-            
-            Enumeration<Class<? extends Broadcast>> broadcastsEnu = broadcastsSubscribers.keys();
-            while (broadcastsEnu.hasMoreElements()) { 
-                LinkedBlockingQueue<MicroService> currentQ = broadcastsSubscribers.get(broadcastsEnu.nextElement());
-                currentQ.remove(m);
-            }
-        } finally {
-            locker.writeLock().unlock();
+        }
+        
+        Enumeration<Class<? extends Broadcast>> broadcastsEnu = broadcastsSubscribers.keys();
+        while (broadcastsEnu.hasMoreElements()) { 
+            LinkedBlockingQueue<MicroService> currentQ = broadcastsSubscribers.get(broadcastsEnu.nextElement());
+            currentQ.remove(m);
+        }
+        synchronized (microServicesMessages) {
+            microServicesMessages.remove(m); // Calling it again, in case more broadcasts calls were added until m was removed from the subscribers queue
         }
         
     }
@@ -134,10 +130,15 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
         LinkedBlockingDeque<Message> queue = microServicesMessages.get(m);
-		if(queue == null) {
-			throw new IllegalStateException("MicroService is not registered");
-		}
-        return queue.take();
+        if(queue == null) {
+            throw new IllegalStateException("MicroService is not registered");
+        }
+        try {
+            return queue.take();
+        } 
+        catch (InterruptedException e) {
+            throw new InterruptedException();
+        }
     }
 
     // @PRE: none
@@ -152,6 +153,3 @@ public class MessageBusImpl implements MessageBus {
         return broadcastsSubscribers;
     }
 }
-
-
-
